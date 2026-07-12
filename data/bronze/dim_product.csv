@@ -1,0 +1,19 @@
+product_id,product_name,category,subcategory,list_price,unit_cost,launch_date,is_active
+1001,Databricks Classic Hoodie,Outerwear,Hoodie,65.00,29.00,2022-10-11,true
+1002,Delta Lake Zip-Up Hoodie,Outerwear,Hoodie,72.00,33.00,2023-07-08,true
+1003,Lakehouse Fleece Jacket,Outerwear,Jacket,95.00,44.00,2023-08-22,true
+1004,Spark Bomber Jacket,Outerwear,Jacket,110.00,53.00,2022-08-20,true
+1005,Databricks Logo Tee,T-Shirts & Tops,T-Shirt,28.00,9.00,2023-04-16,true
+1006,Powered by Spark Tee,T-Shirts & Tops,T-Shirt,30.00,10.00,2023-05-01,true
+1007,Unity Catalog Long-Sleeve,T-Shirts & Tops,Long-Sleeve,38.00,14.00,2023-05-12,true
+1008,MLflow Performance Polo,T-Shirts & Tops,Polo,45.00,18.00,2023-06-24,true
+1009,Databricks Dad Cap,Headwear,Cap,26.00,9.00,2022-08-22,true
+1010,Delta Knit Beanie,Headwear,Beanie,24.00,8.00,2023-07-13,true
+1011,Lakehouse Snapback,Headwear,Cap,30.00,11.00,2022-09-22,true
+1012,Databricks Crew Socks,Accessories,Socks,14.00,4.50,2022-08-20,true
+1013,Spark Sticker Pack,Accessories,Stickers,8.00,1.50,2022-06-04,true
+1014,Databricks Canvas Tote,Accessories,Bag,18.00,6.00,2022-11-28,true
+1015,Lakehouse Laptop Sleeve,Accessories,Bag,32.00,12.00,2023-07-21,true
+1016,Databricks Steel Water Bottle,Drinkware,Bottle,28.00,9.00,2022-11-05,true
+1017,Delta Ceramic Mug,Drinkware,Mug,16.00,5.00,2023-01-30,true
+1018,Spark Travel Tumbler,Drinkware,Tumbler,34.00,12.00,2023-08-18,true

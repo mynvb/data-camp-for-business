@@ -1,0 +1,16 @@
+forecast_id,category,forecast_month,forecast_revenue_usd,lower_bound_usd,upper_bound_usd,model_name,generated_by,generated_date
+8001,Outerwear,2025-07-01,6000.00,5700.00,6300.00,ds_prophet_v1,data_science_team,2025-06-28
+8002,Outerwear,2025-08-01,5200.00,4940.00,5460.00,ds_prophet_v1,data_science_team,2025-06-28
+8003,Outerwear,2025-09-01,4800.00,4560.00,5040.00,ds_prophet_v1,data_science_team,2025-06-28
+8004,Headwear,2025-07-01,72000.00,77000.00,87000.00,ds_prophet_v1,data_science_team,2025-06-28
+8005,Headwear,2025-08-01,81000.00,86000.00,96000.00,ds_prophet_v1,data_science_team,2025-06-28
+8006,Headwear,2025-09-01,90000.00,95000.00,105000.00,ds_prophet_v1,data_science_team,2025-06-28
+8007,Accessories,2025-07-01,-1500.00,-2000.00,-1000.00,ds_prophet_v1,data_science_team,2025-06-28
+8008,Accessories,2025-08-01,-800.00,-1300.00,-300.00,ds_prophet_v1,data_science_team,2025-06-28
+8009,Accessories,2025-09-01,-2000.00,-2500.00,-1500.00,ds_prophet_v1,data_science_team,2025-06-28
+8010,Drinkware,2025-07-01,8000.00,-32000.00,48000.00,ds_prophet_v1,data_science_team,2025-06-28
+8011,Drinkware,2025-08-01,8000.00,-32000.00,48000.00,ds_prophet_v1,data_science_team,2025-06-28
+8012,Drinkware,2025-09-01,8000.00,-32000.00,48000.00,ds_prophet_v1,data_science_team,2025-06-28
+8013,T-Shirts & Tops,2025-07-01,20000.00,19000.00,21000.00,ds_prophet_v1,data_science_team,2025-06-28
+8014,T-Shirts & Tops,2025-08-01,20000.00,19000.00,21000.00,ds_prophet_v1,data_science_team,2025-06-28
+8015,T-Shirts & Tops,2025-09-01,20000.00,19000.00,21000.00,ds_prophet_v1,data_science_team,2025-06-28

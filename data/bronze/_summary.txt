@@ -1,0 +1,9 @@
+Rows: products=18 customers=1800 orders=17485 order_items=28938 campaigns=72 ds_forecasts=15
+
+Category                Revenue       Profit  Margin%    Units  Growth%  MktROI
+-------------------------------------------------------------------------------
+Outerwear               655,260      332,281    50.7%    8,108      98%     4.7x
+T-Shirts & Tops         338,414      209,872    62.0%   10,197      85%     2.6x
+Headwear                135,706       86,622    63.8%    5,404      88%     3.4x
+Accessories             135,262       89,411    66.1%    8,433      43%     1.8x
+Drinkware               115,017       75,528    65.7%    4,602      55%     3.0x
