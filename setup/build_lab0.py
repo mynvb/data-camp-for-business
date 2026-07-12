@@ -77,27 +77,14 @@ cfg = print_config()"""),
 
 md("""## 0.3 — Permissions you need
 
-These labs are written so a **non-admin business user** can complete them. Here
-is the full list of what your account needs. The automated check in the next
-step will tell you exactly which (if any) are missing — you don't have to read
-this table line by line, it's here for reference.
+These labs are written so a **non-admin business user** can complete them. You
+don't need to memorize a list — the automated check in the next step tells you
+exactly which permissions (if any) are missing and prints copy-paste SQL for your
+admin.
 
-| # | Capability | Why it's needed | Lab |
-|---|------------|-----------------|-----|
-| 1 | **Attach to compute** (Serverless or a UC-enabled cluster) | Run any code | All |
-| 2 | **Unity Catalog enabled** on the workspace | Governed tables, Genie, domains | All |
-| 3 | **`CREATE CATALOG`** on the metastore *— OR —* an admin pre-creates `retail_corp` and grants you **ownership** | Create the project catalog | 0 |
-| 4 | **`USE CATALOG`, `CREATE SCHEMA`, `CREATE TABLE`, `SELECT`, `MODIFY`** on the catalog | Build bronze/silver/gold tables | 0, 1, 3 |
-| 5 | **`CREATE VOLUME`** (covered by schema-level `CREATE TABLE`) | Store CSVs + the PDF | 0, 1 |
-| 6 | A **SQL Warehouse** you can use (Serverless recommended) | Genie, metric views, dashboards | 2, 4, 5, 6 |
-| 7 | **Lakeflow / Declarative Pipelines** entitlement | Build the medallion pipeline | 3 |
-| 8 | **Genie & AI/BI** enabled (Databricks Assistant) | Data discovery, Genie Spaces, dashboards | 2, 4, 5, 6 |
-| 9 | **Lakebase / Database Instances** enabled *(optional)* | The "source system" for Lab 1 | 1 |
-
-> ⚠️ **If you are NOT an admin:** you most likely have items 1–2 and can be
-> granted 3–5 easily. Items 6–9 are workspace *features* an admin toggles once.
-> The checker below prints copy-paste SQL your admin can run for the grant-based
-> items."""),
+> 📄 **Want the full reference?** The complete permission table (what each grant is
+> for, and which lab needs it) lives in **[SETUP.md](../SETUP.md)**. If you are *not*
+> an admin, that's the page to share with whoever administers your workspace."""),
 
 md("""## 0.4 — Run the automated permission check
 
@@ -177,15 +164,9 @@ You now have:
 - ✅ Six bronze tables loaded + a Volume with CSVs and the PDF
 - ✅ A Lakebase instance provisioned (or a graceful fallback)
 
-### The data you'll be working with
-| Table | Grain | What it is |
-|-------|-------|------------|
-| `dim_product` | 1 row / product | 18 merch SKUs across 5 categories |
-| `dim_customer` | 1 row / customer | 1,800 e-commerce customers |
-| `fact_orders` | 1 row / order | ~17.5K order headers |
-| `fact_order_items` | 1 row / line item | ~29K order lines |
-| `fact_marketing_campaigns` | 1 row / campaign / month | 72 marketing campaigns |
-| `fact_sales_forecast` | 1 row / category / month | 15 forecast rows from the Data Science team (used in Lab 5) |
+> 📄 **Curious what's in these tables?** The full data model (every table, its grain,
+> and what it contains) is documented in **[SETUP.md](../SETUP.md)**. You'll also
+> explore it hands-on in Lab 2.
 
 **Next up → Lab 1: Data Ingestion.** You'll connect to the Lakebase source with
 Lakeflow Connect and bring the market-research PDF into Databricks.""")

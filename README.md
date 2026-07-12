@@ -38,7 +38,7 @@ KPIs, decide, and visualize.
 
 ---
 
-## 🧭 What you'll build (the 7 labs)
+## 🧭 What you'll build (the 8 labs)
 
 | Lab | Title | What you do | Key Databricks capabilities |
 |-----|-------|-------------|-----------------------------|
@@ -68,7 +68,7 @@ know where you are in the journey.
 3. **Run Lab 0 top to bottom.** It checks your permissions and runs a single
    deployment script that creates the catalog, schemas, volume, bronze tables, and
    the Lakebase instance.
-4. **Do the labs in order** (0 → 6). Each builds on the previous one.
+4. **Do the labs in order** (0 → 7). Each builds on the previous one.
 
 > 💡 New to Databricks notebooks? Just click a cell and press **Shift+Enter** to run
 > it. Read the markdown above each code cell first — it explains what's about to happen.
@@ -95,82 +95,7 @@ learn the concept and complete the work. See the full permission table in Lab 0.
 
 ---
 
-## 📁 Repository structure
+## 📄 More detail
 
-```
-data-camp-for-business/
-├── README.md                     ← you are here
-├── labs/                         ← the 7 guided lab notebooks (run in order)
-│   ├── Lab 0 - Setup.ipynb
-│   ├── Lab 1 - Data Ingestion.ipynb
-│   ├── Lab 2 - Data Discovery.ipynb
-│   ├── Lab 3 - Transform Data.ipynb
-│   ├── Lab 4 - Business KPIs.ipynb
-│   ├── Lab 5 - Decision Making.ipynb
-│   ├── Lab 6 - Visualizing Data.ipynb
-│   └── Lab 7 - Clean Up.ipynb
-├── setup/                        ← shared config + automation (used by the labs)
-│   ├── config.py                 ← ONE place to change catalog/schema names
-│   ├── check_permissions.py      ← read-only permission auditor (prints TO-DOs)
-│   ├── deploy_all.py             ← single idempotent deployment script
-│   ├── generate_seed_data.py     ← regenerates the bronze CSVs (deterministic)
-│   └── build_lab*.py             ← notebook generators (maintainers only)
-├── data/
-│   └── bronze/                   ← seed CSVs loaded into bronze in Lab 0
-│       ├── dim_product.csv
-│       ├── dim_customer.csv
-│       ├── fact_orders.csv
-│       ├── fact_order_items.csv
-│       └── fact_marketing_campaigns.csv
-└── assets/
-    └── market_research/
-        ├── Databricks_Retail_Market_Research.pdf   ← download in Lab 0, use in Lab 5
-        └── build_pdf.py                            ← regenerates the PDF
-```
-
----
-
-## 🗃️ The data model
-
-Your "operational" data (in Lakebase / bronze) is a small retail star schema:
-
-| Table | Grain | Description |
-|-------|-------|-------------|
-| `dim_product` | 1 row / product | 18 merch SKUs across 5 categories |
-| `dim_customer` | 1 row / customer | 1,800 e-commerce customers |
-| `fact_orders` | 1 row / order | ~17.5K order headers (18 months of history) |
-| `fact_order_items` | 1 row / line item | ~29K order lines |
-| `fact_marketing_campaigns` | 1 row / campaign / month | 72 campaigns with spend & attributed revenue |
-| `fact_sales_forecast` | 1 row / category / month | 15 forecast rows "from the Data Science team" — **deliberately full of anomalies** so Lab 5 teaches you to *validate* a forecast, not trust it blindly |
-
-The five merch categories: **Outerwear**, **T-Shirts & Tops**, **Headwear**,
-**Accessories**, **Drinkware**. Part of the fun of the labs is discovering that the
-"best" category to promote depends entirely on *which* metric you trust — which is
-exactly why the KPI and Genie labs matter.
-
-> All data is **synthetic and deterministic** (seeded), so every learner sees the
-> same numbers and the labs' validation checks always pass. Regenerate it any time
-> with `python3 setup/generate_seed_data.py`.
-
----
-
-## 🔧 For maintainers
-
-- **Change catalog/schema names** in one place: `setup/config.py`.
-- **Regenerate the seed data:** `python3 setup/generate_seed_data.py` (writes
-  `data/bronze/*.csv`).
-- **Regenerate the market-research PDF:** `python3 assets/market_research/build_pdf.py`.
-- **Regenerate the notebooks:** `for n in 0 1 2 3 4 5 6; do python3 setup/build_lab$n.py; done`.
-  The notebook *content* lives in the `setup/build_lab*.py` generators, which emit
-  valid `.ipynb` JSON via `setup/nbbuild.py`. Edit the generator, not the `.ipynb`.
-
----
-
-## 📚 Credits & references
-
-- Metric-view patterns adapted from *Databricks Dashboard In A Day — Lab 2: Data
-  Modelling.*
-- Built as hands-on enablement for business users at a Databricks customer.
-
-All figures, companies, and the market-research brief are **fictional**, created for
-instructional use only.
+For the **full permission reference, the data model, the repository layout, and
+maintainer notes**, see **[SETUP.md](SETUP.md)**.
