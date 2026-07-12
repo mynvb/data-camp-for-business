@@ -13,10 +13,15 @@ obvious.
 
 ## 📖 The story: you are the new CEO of Databricks Retail Corp.
 
+![Databricks Retail Corp. storefront](assets/screenshot%20mock%20website.png)
+
 You've just been appointed **CEO of Databricks Retail Corp.** — the e-commerce shop
 (a Databricks subsidiary) that sells Databricks-branded merchandise: hoodies, tees,
 caps, socks, bottles, and more. Funny enough, Databricks Retail Corp. has **never
 used Databricks for its own analytics**. You're here to change that.
+
+*(The storefront above is a fictional mockup for the training. The products shown —
+like the Databricks Logo Tee — are the same items you'll analyze in the labs.)*
 
 > **Your mission:** decide **which category of Databricks-branded merch to promote
 > next quarter.** You'll make a *truly data-driven* call using:
