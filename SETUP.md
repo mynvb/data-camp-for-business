@@ -120,14 +120,3 @@ data-camp-for-business/
 - **Regenerate the notebooks:** `for n in 0 1 2 3 4 5 6 7; do python3 setup/build_lab$n.py; done`.
   The notebook *content* lives in the `setup/build_lab*.py` generators, which emit
   valid `.ipynb` JSON via `setup/nbbuild.py`. **Edit the generator, not the `.ipynb`.**
-
----
-
-## 📚 Credits & references
-
-- Metric-view patterns adapted from *Databricks Dashboard In A Day — Lab 2: Data
-  Modelling.*
-- Built as hands-on enablement for business users at a Databricks customer.
-
-All figures, companies, and the market-research brief are **fictional**, created for
-instructional use only.
