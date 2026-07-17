@@ -33,7 +33,11 @@ In this lab you will:
 > 📚 Reference used for this lab's metric-view patterns:
 > *Databricks Dashboard In A Day — Lab 2: Data Modelling.*"""),
 
-md("""## 4.0 — Load config"""),
+md("""## 4.0 — (Optional) Load config
+
+This lab is **UI-first** — you'll create the metric views in the Catalog UI. You only
+need this cell **if** you want to run the *Optional* create-from-code or validation
+cells later. Skip it otherwise."""),
 
 code("""import os, sys
 def find_repo_root():
@@ -116,21 +120,17 @@ decision depends on: **revenue, cost, profit (with margin), and marketing ROI**.
 > metric views: one over sales (`retail_metrics_sales`) and one over marketing
 > (`retail_metrics_marketing`). Each is single-source, which keeps measures clean.
 
-### Create in the UI (recommended for learning)
+### Create in the UI
 1. **Catalog** → open the **`gold`** schema → **Create → Metric View**.
 2. Name it **`retail_metrics_sales`**, source = `retail_corp.silver.sales`.
-3. Paste the YAML from the next cell's printed output into the YAML editor. **Save.**
-4. Repeat for **`retail_metrics_marketing`** (source = `retail_corp.silver.marketing`).
+3. Paste the **sales YAML** below into the YAML editor. **Save.**
+4. Create a second metric view **`retail_metrics_marketing`** (source =
+   `retail_corp.silver.marketing`) and paste the **marketing YAML** below. **Save.**
 
-### Or create from code
-Recent Databricks runtimes support `CREATE VIEW ... WITH METRICS` / metric-view DDL.
-The cell after the YAML attempts the code path and **falls back to a regular view**
-with the same measures if metric-view DDL isn't available on your runtime — so your
-validations still work."""),
-
-code("""# Print the reference YAML so you can paste it into the Metric View UI editor.
-sales_yaml = f'''version: 1.1
-source: {cfg['CATALOG_SILVER']}.sales
+**Sales metric view YAML** (`retail_metrics_sales`):
+```yaml
+version: 1.1
+source: retail_corp.silver.sales
 dimensions:
   - name: Category
     expr: category
@@ -143,30 +143,25 @@ dimensions:
 measures:
   - name: Total Revenue
     expr: SUM(line_revenue)
-    format:
-      type: currency
-      currency_code: USD
+    format: {type: currency, currency_code: USD}
   - name: Total Cost
     expr: SUM(quantity * unit_cost)
-    format:
-      type: currency
-      currency_code: USD
+    format: {type: currency, currency_code: USD}
   - name: Total Profit
     expr: SUM(line_profit)
-    format:
-      type: currency
-      currency_code: USD
+    format: {type: currency, currency_code: USD}
   - name: Profit Margin Pct
     expr: 100 * measure(`Total Profit`) / measure(`Total Revenue`)
   - name: Units Sold
     expr: SUM(quantity)
   - name: Avg Order Line Value
     expr: AVG(line_revenue)
-'''
-print(sales_yaml)"""),
+```
 
-code("""marketing_yaml = f'''version: 1.1
-source: {cfg['CATALOG_SILVER']}.marketing
+**Marketing metric view YAML** (`retail_metrics_marketing`):
+```yaml
+version: 1.1
+source: retail_corp.silver.marketing
 dimensions:
   - name: Category
     expr: category
@@ -175,24 +170,76 @@ dimensions:
 measures:
   - name: Marketing Spend
     expr: SUM(spend_usd)
-    format:
-      type: currency
-      currency_code: USD
+    format: {type: currency, currency_code: USD}
   - name: Attributed Revenue
     expr: SUM(attributed_revenue_usd)
-    format:
-      type: currency
-      currency_code: USD
+    format: {type: currency, currency_code: USD}
+  - name: Marketing ROI
+    expr: measure(`Attributed Revenue`) / measure(`Marketing Spend`)
+  - name: Conversions
+    expr: SUM(conversions)
+```
+
+> 💡 If your `silver` catalog/schema names differ from the defaults, adjust the
+> `source:` lines accordingly."""),
+
+md("""### 🔎 (Optional) Create the metric views from code
+
+Prefer to create them without the UI (or your workspace doesn't have the Metric View
+editor)? The cell below creates them with metric-view DDL and **falls back** to plain
+SQL views with the same measures if the DDL isn't available. **Skip it if you created
+them in the UI above.** *(Run 4.0 first.)*"""),
+
+code("""# OPTIONAL — create both metric views from code (fallback to SQL views).
+G = cfg["CATALOG_GOLD"]; S = cfg["CATALOG_SILVER"]
+
+sales_yaml = f'''version: 1.1
+source: {S}.sales
+dimensions:
+  - name: Category
+    expr: category
+  - name: Channel
+    expr: channel
+  - name: Subcategory
+    expr: subcategory
+  - name: Order Month
+    expr: date_trunc('MONTH', order_date)
+measures:
+  - name: Total Revenue
+    expr: SUM(line_revenue)
+    format: {{type: currency, currency_code: USD}}
+  - name: Total Cost
+    expr: SUM(quantity * unit_cost)
+    format: {{type: currency, currency_code: USD}}
+  - name: Total Profit
+    expr: SUM(line_profit)
+    format: {{type: currency, currency_code: USD}}
+  - name: Profit Margin Pct
+    expr: 100 * measure(`Total Profit`) / measure(`Total Revenue`)
+  - name: Units Sold
+    expr: SUM(quantity)
+  - name: Avg Order Line Value
+    expr: AVG(line_revenue)
+'''
+marketing_yaml = f'''version: 1.1
+source: {S}.marketing
+dimensions:
+  - name: Category
+    expr: category
+  - name: Marketing Channel
+    expr: channel
+measures:
+  - name: Marketing Spend
+    expr: SUM(spend_usd)
+    format: {{type: currency, currency_code: USD}}
+  - name: Attributed Revenue
+    expr: SUM(attributed_revenue_usd)
+    format: {{type: currency, currency_code: USD}}
   - name: Marketing ROI
     expr: measure(`Attributed Revenue`) / measure(`Marketing Spend`)
   - name: Conversions
     expr: SUM(conversions)
 '''
-print(marketing_yaml)"""),
-
-code("""# Try to create metric views from code; fall back to equivalent SQL views if the
-# runtime doesn't support metric-view DDL. Either way you can validate in 4.4.
-G = cfg["CATALOG_GOLD"]; S = cfg["CATALOG_SILVER"]
 
 def try_metric_view(name, yaml_text):
     try:
@@ -207,7 +254,6 @@ def try_metric_view(name, yaml_text):
 made_sales = try_metric_view("retail_metrics_sales", sales_yaml)
 made_mkt   = try_metric_view("retail_metrics_marketing", marketing_yaml)
 
-# Fallback: plain views that encode the SAME measures, so the rest of the lab runs.
 if not made_sales:
     spark.sql(f'''CREATE OR REPLACE VIEW {G}.retail_metrics_sales AS
         SELECT category AS Category, channel AS Channel, subcategory AS Subcategory,
@@ -234,17 +280,23 @@ if not made_mkt:
 
 md("""## 4.4 — Validate the metric views
 
-Validation answers one question: **do the measures return the numbers we expect?**
-We check the metric view against the raw silver tables. If they match, everyone can
-trust the KPIs.
+**Validate in the UI first** — no code needed:
 
-> **How to query a metric view:** you `SELECT` dimensions and measures from it like
-> a table. On a true metric view, measures are aggregated automatically. The
-> validation queries below are written to work on **both** the metric view and the
-> fallback view."""),
+1. **Catalog** → `retail_corp.gold.retail_metrics_sales`. On a Metric View you'll see
+   its **dimensions and measures** listed. Many workspaces offer a **preview /
+   "Query this metric view"** button — use it to group **Total Profit** by
+   **Category** and confirm the numbers look sane (Outerwear highest profit).
+2. Open **`retail_metrics_marketing`** and preview **Marketing ROI** by **Category** —
+   Outerwear should top the list (~4–5×), Accessories lowest (~1.8×).
+3. Sanity-check the definitions read correctly (e.g. Profit Margin Pct uses
+   `Total Profit / Total Revenue`).
 
-code("""# VALIDATION 1 — Revenue/profit/margin by category from the SALES metric view,
-# cross-checked against a direct query on silver.sales.
+> 🔎 **(Optional) Validate with SQL** — the cells below cross-check the metric views
+> against the raw silver tables and assert the profit identity holds. Skip if the UI
+> preview looked right. *(Run 4.0 and, if you used code to create the views, the
+> Optional cell above, first.)*"""),
+
+code("""# OPTIONAL — VALIDATION 1: revenue/profit/margin by category vs. silver.sales.
 G = cfg["CATALOG_GOLD"]; S = cfg["CATALOG_SILVER"]
 
 print("From the metric view (retail_metrics_sales):")
@@ -268,8 +320,7 @@ display(spark.sql(f'''
     FROM {S}.sales GROUP BY category ORDER BY profit DESC
 '''))"""),
 
-code("""# VALIDATION 2 — Marketing ROI by category from the MARKETING metric view,
-# cross-checked against silver.marketing. Outerwear should top ROI.
+code("""# OPTIONAL — VALIDATION 2: marketing ROI vs. silver.marketing (Outerwear tops ROI).
 G = cfg["CATALOG_GOLD"]; S = cfg["CATALOG_SILVER"]
 
 print("From the metric view (retail_metrics_marketing):")
@@ -291,8 +342,7 @@ display(spark.sql(f'''
     FROM {S}.marketing GROUP BY category ORDER BY marketing_roi DESC
 '''))"""),
 
-code("""# VALIDATION 3 — Automated assertions. These enforce that the KPI definitions are
-# self-consistent, so nobody can quietly change a formula and break trust.
+code("""# OPTIONAL — VALIDATION 3: assert the profit identity (Revenue - Cost = Profit).
 G = cfg["CATALOG_GOLD"]
 
 row = spark.sql(f'''

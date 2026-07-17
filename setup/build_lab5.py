@@ -36,25 +36,19 @@ In this lab you will:
 
 ⏱️ *Estimated time: 55–65 minutes.*"""),
 
-md("""## 5.0 — Load config (for reference)"""),
+md("""## 5.0 — What you'll build a Genie Space over
 
-code("""import os, sys
-def find_repo_root():
-    p = os.getcwd()
-    for _ in range(6):
-        if os.path.isdir(os.path.join(p, "setup")) and os.path.isdir(os.path.join(p, "labs")):
-            return p
-        p = os.path.dirname(p)
-    return os.getcwd()
-REPO_ROOT = find_repo_root()
-sys.path.insert(0, os.path.join(REPO_ROOT, "setup"))
-from config import get_config
-cfg = get_config()
-print("You'll build a Genie Space over:")
-print("  •", cfg["CATALOG_GOLD"] + ".retail_metrics_sales      (metric view)")
-print("  •", cfg["CATALOG_GOLD"] + ".retail_metrics_marketing  (metric view)")
-print("  •", cfg["CATALOG_GOLD"] + ".category_performance      (gold table)")
-print("  •", cfg["CATALOG_GOLD"] + ".daily_revenue             (gold table)")"""),
+This lab is mostly done in the **Genie** UI. Your Genie Space will use these assets
+(all created in earlier labs):
+
+- `retail_corp.gold.retail_metrics_sales` — **metric view** (Lab 4)
+- `retail_corp.gold.retail_metrics_marketing` — **metric view** (Lab 4)
+- `retail_corp.gold.category_performance` — **gold table** (Lab 3)
+- `retail_corp.gold.daily_revenue` — **gold table** (Lab 3)
+
+> The only place code appears in this lab is the **optional** forecasting section
+> (5.5–5.6), because `ai_forecast()` and the forecast-comparison have no point-and-click
+> equivalent yet. Everything else is UI."""),
 
 md("""## 5.1 — Create a Genie Space
 
@@ -175,7 +169,38 @@ SELECT * FROM ai_forecast(
 > 🧭 **Availability note:** `ai_forecast()` runs on a **Serverless SQL Warehouse /
 > DBSQL**. If it isn't available on your compute, the cell below catches the error
 > and falls back to a simple **3-month-average** baseline forecast so you can still
-> complete the comparison in 5.6. The *lesson* — comparing two forecasts — is the same."""),
+> complete the comparison in 5.6. The *lesson* — comparing two forecasts — is the same.
+
+### Do it in the UI first (ask Genie)
+Before running any code, try it conversationally in your **Genie Space**:
+- Ask Genie to **show monthly revenue by category over time** (a trend). Note the
+  recent trajectory for each category.
+- Ask Genie which categories are **trending up** most strongly over the last few
+  months. This is your intuition-level "forecast."
+
+Then use the optional code below for a **real statistical forecast** you can compare
+against — Genie's trend view and `ai_forecast()` should broadly agree.
+
+### 🔎 (Optional) Generate a statistical forecast with `ai_forecast()`
+The cells in 5.5–5.6 are the one place this lab uses code, because forecasting and
+forecast-validation have no point-and-click equivalent yet. Run them to produce a
+defensible forecast and catch the Data Science team's bad numbers. *(This first cell
+loads config; run it before the others.)*"""),
+
+code("""# (Optional) Load config for the forecasting cells.
+import os, sys
+def find_repo_root():
+    p = os.getcwd()
+    for _ in range(6):
+        if os.path.isdir(os.path.join(p, "setup")) and os.path.isdir(os.path.join(p, "labs")):
+            return p
+        p = os.path.dirname(p)
+    return os.getcwd()
+sys.path.insert(0, os.path.join(find_repo_root(), "setup"))
+from config import get_config
+cfg = get_config()
+spark.sql(f"USE CATALOG {cfg['CATALOG']}")
+print("Config loaded for forecasting. Gold:", cfg["CATALOG_GOLD"])"""),
 
 code("""# Build the monthly revenue history per category from your GOLD daily table,
 # then forecast the next 3 months with ai_forecast(). Falls back gracefully.
@@ -253,7 +278,11 @@ Your company's **Data Science team** already sent over a forecast — it's sitti
 **don't just accept a hand-off** — you compare it against your own `ai_forecast()`
 numbers and against reality.
 
-Run the comparison below. Then **judge for yourself which forecast to trust.**"""),
+> 🔎 **(Optional, continues 5.5)** Run the comparison below. Then **judge for
+> yourself which forecast to trust.** *(Requires the optional forecasting cells in
+> 5.5.)* If you skipped the code, you can still do this by eye: open
+> `bronze.fact_sales_forecast` in **Catalog → Sample Data** and compare its numbers to
+> the recent monthly revenue Genie showed you — the problems are visible without code."""),
 
 code("""# Join the two forecasts side by side, plus a recent-actuals baseline for context.
 G = cfg["CATALOG_GOLD"]; B = cfg["CATALOG_BRONZE"]

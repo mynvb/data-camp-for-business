@@ -25,12 +25,19 @@ apply the **medallion architecture**:
 
 Then you'll **schedule a daily job** to keep gold fresh.
 
-For each build step you'll get: **(a)** the plain-English instruction to type into
-Lakeflow Designer, and **(b)** SQL you can run here to **validate** the result.
+This is a **UI-first** lab: you build the whole pipeline visually in **Lakeflow
+Designer** by describing each table in plain English. For every table you'll get the
+**exact text to type** and how to **verify it in the UI**. (Optional SQL is provided
+at the end of each step for anyone who wants to double-check with numbers — skip it if
+the UI looks right.)
 
 ⏱️ *Estimated time: 40–45 minutes.*"""),
 
-md("""## 3.0 — Load config"""),
+md("""## 3.0 — (Optional) Load config
+
+You only need this cell **if** you plan to run the *Optional* reference-build or
+double-check SQL cells later in the lab. If you're doing everything in the Lakeflow
+Designer UI (the main path), you can skip it."""),
 
 code("""import os, sys
 def find_repo_root():
@@ -67,13 +74,12 @@ to build the same **Lakeflow Declarative Pipelines** an engineer would write in 
 
 > 🧭 **How the "text examples" below work:** Lakeflow Designer lets you describe a
 > transformation in natural language (and/or configure joins visually). For each
-> silver/gold table we give you **exactly what to type**. After you build it,
-> run the matching **validation SQL** cell here to confirm it's correct.
+> silver/gold table we give you **exactly what to type**. After you build it, verify
+> it **in the UI** (Catalog → Sample Data / row count).
 
-> ⚠️ **No Lakeflow Designer in your workspace?** You can still complete the lab: run
-> the provided "reference build" SQL cells (clearly marked) to create the same
-> silver/gold tables directly, then run the validations. The learning goal — a
-> correct medallion — is identical."""),
+> ⚠️ **No Lakeflow Designer in your workspace?** Each step also includes an **Optional
+> reference-build** cell (clearly marked) that creates the same table with SQL, so you
+> can still complete the lab. The learning goal — a correct medallion — is identical."""),
 
 md("""## 3.2 — Silver table #1: `silver.sales`
 
@@ -97,8 +103,30 @@ cancelled orders removed and product attributes joined in.
 
 Filter: `order_status <> 'CANCELLED'`."""),
 
-code("""# --- REFERENCE BUILD (use only if you're NOT using Lakeflow Designer) ---
-# This creates the exact silver.sales table the Designer step above produces.
+md("""### ✅ Validate `silver.sales` — in the UI
+
+After the pipeline runs, confirm the table looks right without any code:
+
+1. **Catalog** → `retail_corp.silver.sales` → **Sample Data**. Check that
+   `line_revenue` and `line_profit` columns are present and populated, and that
+   `product_name` / `category` came through from the join.
+2. **Overview** tab → check the **row count** looks reasonable (~28K line items).
+3. Still on Sample Data, use the column filter on **`order_status`** — you should see
+   **no `CANCELLED`** rows (the filter worked).
+4. In **Lakeflow Designer**, the table node shows a **row count and data preview** as
+   it runs — a quick visual confirmation the join produced the expected rows.
+
+> ✅ **What "good" looks like:** `line_revenue` = quantity × unit_price on each row,
+> no cancelled orders, and roughly the same row count as bronze `fact_order_items`
+> minus cancellations."""),
+
+md("""### 🔎 (Optional) Double-check `silver.sales` with SQL
+
+Prefer exact numbers? These cells assert the join logic and computed columns are
+correct. **Skip them if the UI checks above looked good.** *(Run 3.0 first.)*"""),
+
+code("""# OPTIONAL — reference build (use only if you're NOT using Lakeflow Designer).
+# Creates the exact silver.sales table the Designer step above produces.
 S = cfg["CATALOG_SILVER"]; B = cfg["CATALOG_BRONZE"]
 spark.sql(f'''
 CREATE OR REPLACE TABLE {S}.sales AS
@@ -125,12 +153,8 @@ WHERE o.order_status <> 'CANCELLED'
 ''')
 print("✓ built", f"{S}.sales")"""),
 
-md("""### ✅ Validate `silver.sales`
-
-Run these checks whether you built the table in Designer or via the reference SQL.
-They confirm the join logic and filter are correct."""),
-
-code("""S = cfg["CATALOG_SILVER"]; B = cfg["CATALOG_BRONZE"]
+code("""# OPTIONAL — numeric validation of the join logic and filter.
+S = cfg["CATALOG_SILVER"]; B = cfg["CATALOG_BRONZE"]
 
 print("CHECK 1 — no CANCELLED orders leaked in:")
 display(spark.sql(f"SELECT order_status, COUNT(*) n FROM {S}.sales GROUP BY order_status"))
@@ -143,9 +167,9 @@ display(spark.sql(f'''
          FROM {B}.fact_order_items oi
          JOIN {B}.fact_orders o ON oi.order_id = o.order_id
          WHERE o.order_status <> 'CANCELLED') AS expected_rows
-'''))"""),
+'''))
 
-code("""# CHECK 3 — computed columns are correct (no rows should violate these)
+# CHECK 3 — computed columns are correct (no rows should violate these)
 bad = spark.sql(f'''
     SELECT COUNT(*) AS bad_rows FROM {S}.sales
     WHERE ROUND(line_revenue, 2) <> ROUND(quantity * unit_price, 2)
@@ -166,9 +190,18 @@ spend), ready to roll up by category.
 > channel, start_date, spend_usd, impressions, clicks, conversions,
 > attributed_revenue_usd. Add a computed column **campaign_roi** =
 > attributed_revenue_usd ÷ spend_usd. Exclude any rows where spend_usd is 0 or
-> null."*"""),
+> null."*
 
-code("""# --- REFERENCE BUILD (skip if using Lakeflow Designer) ---
+### ✅ Validate `silver.marketing` — in the UI
+1. **Catalog** → `retail_corp.silver.marketing` → **Sample Data**. Confirm the new
+   **`campaign_roi`** column is present and looks like a small multiple (≈1.5–5.0).
+2. **Overview** → row count should be ~72 (one per campaign/month, minus any with
+   zero spend).
+
+> 🔎 **(Optional) Double-check with SQL** — the cell below rolls ROI up by category.
+> Skip if the UI looked right. *(Run 3.0 first.)*"""),
+
+code("""# OPTIONAL — reference build + validation for silver.marketing.
 S = cfg["CATALOG_SILVER"]; B = cfg["CATALOG_BRONZE"]
 spark.sql(f'''
 CREATE OR REPLACE TABLE {S}.marketing AS
@@ -179,10 +212,8 @@ SELECT
 FROM {B}.fact_marketing_campaigns
 WHERE spend_usd IS NOT NULL AND spend_usd > 0
 ''')
-print("✓ built", f"{S}.marketing")"""),
+print("✓ built", f"{S}.marketing")
 
-code("""# ✅ Validate silver.marketing
-S = cfg["CATALOG_SILVER"]
 print("CHECK — ROI computed and positive; every category represented:")
 display(spark.sql(f'''
     SELECT category,
@@ -208,9 +239,22 @@ choose what to promote: revenue, profit, margin, units, and marketing ROI.
 > order_lines = count of rows, and profit_margin_pct = total_profit ÷ total_revenue
 > × 100. Then join **silver.marketing** aggregated by category to add marketing_spend
 > = sum of spend_usd and marketing_attributed_revenue = sum of attributed_revenue_usd,
-> and compute marketing_roi = marketing_attributed_revenue ÷ marketing_spend."*"""),
+> and compute marketing_roi = marketing_attributed_revenue ÷ marketing_spend."*
 
-code("""# --- REFERENCE BUILD (skip if using Lakeflow Designer) ---
+### ✅ Validate `gold.category_performance` — in the UI
+1. **Catalog** → `retail_corp.gold.category_performance` → **Sample Data**. You should
+   see **one row per category** (5 rows) with columns for revenue, profit, margin %,
+   units, and marketing ROI.
+2. Sort/scan the preview and notice the **tension** you'll resolve in Labs 4–5:
+   - **Outerwear** leads on **profit $** and **marketing ROI**.
+   - **T-Shirts** and **Accessories** lead on **units**.
+   - **Accessories** has a high **margin %** but small profit $ and the worst ROI.
+   - So "what to promote" depends on *which* KPI you trust — exactly why Lab 4 exists.
+
+> 🔎 **(Optional) Double-check with SQL** — confirms the gold aggregate ties back to
+> silver exactly. Skip if the preview looked right. *(Run 3.0 first.)*"""),
+
+code("""# OPTIONAL — reference build + validation for gold.category_performance.
 G = cfg["CATALOG_GOLD"]; S = cfg["CATALOG_SILVER"]
 spark.sql(f'''
 CREATE OR REPLACE TABLE {G}.category_performance AS
@@ -243,11 +287,8 @@ SELECT
 FROM s LEFT JOIN m ON s.category = m.category
 ''')
 print("✓ built", f"{G}.category_performance")
-display(spark.table(f"{G}.category_performance").orderBy("total_profit", ascending=False))"""),
 
-code("""# ✅ Validate gold.category_performance
-G = cfg["CATALOG_GOLD"]; S = cfg["CATALOG_SILVER"]
-print("CHECK 1 — gold revenue by category matches silver (gold is just an aggregate):")
+# gold revenue by category should match silver exactly (gold is just an aggregate)
 display(spark.sql(f'''
     SELECT g.category,
            g.total_revenue AS gold_revenue,
@@ -260,20 +301,6 @@ display(spark.sql(f'''
 '''))
 print("All differences should be ~0.00")"""),
 
-code("""# CHECK 2 — the business punchline: rank categories by each KPI
-G = cfg["CATALOG_GOLD"]
-display(spark.sql(f'''
-    SELECT category, total_revenue, total_profit, profit_margin_pct,
-           units_sold, marketing_roi
-    FROM {G}.category_performance
-    ORDER BY total_profit DESC
-'''))
-print("Notice the tension you'll resolve in Labs 4-5:")
-print("  • Outerwear leads on PROFIT $ and MARKETING ROI.")
-print("  • T-Shirts & Accessories lead on UNITS.")
-print("  • Accessories has a high MARGIN % but tiny profit $ and worst ROI.")
-print("  → 'What to promote' depends on which KPI you trust. That's Lab 4.")"""),
-
 md("""## 3.5 — Gold table #2: `gold.daily_revenue`
 
 For the dashboards in Lab 6 you'll want a **daily time series**. Build a gold table
@@ -283,9 +310,18 @@ at the **date × category** grain.
 > *"Create a table **daily_revenue** in the **gold** schema from **silver.sales**.
 > Group by **order_date** and **category**. Compute daily_revenue = sum of
 > line_revenue, daily_profit = sum of line_profit, daily_units = sum of quantity,
-> and orders = count of distinct order_id."*"""),
+> and orders = count of distinct order_id."*
 
-code("""# --- REFERENCE BUILD (skip if using Lakeflow Designer) ---
+### ✅ Validate `gold.daily_revenue` — in the UI
+1. **Catalog** → `retail_corp.gold.daily_revenue` → **Sample Data**. Confirm you have
+   one row per **date × category**, with daily revenue/profit/units.
+2. **Overview** → the row count should be large (≈ 18 months × 5 categories of days).
+
+> 🔎 **(Optional) Double-check with SQL** — confirms daily totals sum back to the
+> category totals and the date range is continuous. Skip if the preview looked right.
+> *(Run 3.0 first.)*"""),
+
+code("""# OPTIONAL — reference build + validation for gold.daily_revenue.
 G = cfg["CATALOG_GOLD"]; S = cfg["CATALOG_SILVER"]
 spark.sql(f'''
 CREATE OR REPLACE TABLE {G}.daily_revenue AS
@@ -299,11 +335,9 @@ SELECT
 FROM {S}.sales
 GROUP BY order_date, category
 ''')
-print("✓ built", f"{G}.daily_revenue")"""),
+print("✓ built", f"{G}.daily_revenue")
 
-code("""# ✅ Validate gold.daily_revenue
-G = cfg["CATALOG_GOLD"]
-print("CHECK 1 — daily totals sum back to the category_performance totals:")
+# daily totals should sum back to the category_performance totals
 display(spark.sql(f'''
     SELECT d.category,
            ROUND(SUM(d.daily_revenue),2) AS summed_daily,
@@ -313,60 +347,25 @@ display(spark.sql(f'''
     JOIN {G}.category_performance c ON d.category = c.category
     GROUP BY d.category ORDER BY category_total DESC
 '''))
-print("CHECK 2 — date coverage looks continuous:")
+print("Diffs should be ~0.00. Date coverage:")
 display(spark.sql(f"SELECT MIN(order_date) first_day, MAX(order_date) last_day, "
                   f"COUNT(DISTINCT order_date) distinct_days FROM {G}.daily_revenue"))"""),
 
 md("""## 3.6 — Schedule a daily refresh (Job)
 
-Gold tables must stay current. In real life your pipeline reruns on a schedule.
+Gold tables must stay current. In real life your pipeline reruns on a schedule — and
+you set this up entirely in the UI.
 
-### Do it in the UI (recommended)
+### Do it in the UI
 1. In your **Lakeflow pipeline** (`retail_corp_medallion`), click **Schedule** →
    **Add schedule**.
 2. Set it to run **daily** (e.g. 06:00). Databricks creates a **Job** that triggers
    the pipeline. Name the job **`retail_corp_gold_daily_refresh`**.
-3. Save. Your silver + gold tables now refresh every morning from the latest bronze.
+3. Save. Your silver + gold tables now refresh every morning from the latest bronze —
+   which itself refreshes from Lakebase via your Lab 1 ingestion.
 
-### Or create the Job from code (below)
-This creates a scheduled Job that reruns *this notebook's* build steps daily. It's
-a simple, dependency-free alternative to the pipeline schedule."""),
-
-code("""# Create a daily Job via the SDK. Idempotent-ish: it looks for an existing job by name.
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service import jobs
-
-job_name = cfg["GOLD_JOB_NAME"]
-try:
-    w = WorkspaceClient()
-    existing = [j for j in w.jobs.list(name=job_name)]
-    if existing:
-        print(f"✓ Job '{job_name}' already exists (job_id={existing[0].job_id}).")
-    else:
-        this_nb = None
-        try:
-            this_nb = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
-        except Exception:
-            pass
-        if this_nb:
-            created = w.jobs.create(
-                name=job_name,
-                tasks=[jobs.Task(
-                    task_key="refresh_gold",
-                    notebook_task=jobs.NotebookTask(notebook_path=this_nb),
-                )],
-                schedule=jobs.CronSchedule(
-                    quartz_cron_expression="0 0 6 * * ?",   # daily 06:00
-                    timezone_id="UTC",
-                ),
-            )
-            print(f"✓ Created daily Job '{job_name}' (job_id={created.job_id}). Runs 06:00 UTC.")
-        else:
-            print("Could not resolve this notebook's path automatically.")
-            print("→ Use the UI steps above to schedule the pipeline instead.")
-except Exception as e:
-    print("Could not create Job automatically:", str(e)[:200])
-    print("→ Use the UI steps in 3.6 to add a daily schedule to your pipeline.")"""),
+> 🧭 **Check it:** open **Jobs & Pipelines** → `retail_corp_gold_daily_refresh` and
+> confirm the schedule shows **Daily**. You can also click **Run now** to test it once."""),
 
 md("""## ✅ Lab 3 complete
 

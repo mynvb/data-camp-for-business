@@ -30,152 +30,77 @@ self-explanatory for everyone — then rediscover it.
 
 ⏱️ *Estimated time: 30–35 minutes.*"""),
 
-md("""## 2.0 — Load config"""),
-
-code("""import os, sys
-def find_repo_root():
-    p = os.getcwd()
-    for _ in range(6):
-        if os.path.isdir(os.path.join(p, "setup")) and os.path.isdir(os.path.join(p, "labs")):
-            return p
-        p = os.path.dirname(p)
-    return os.getcwd()
-REPO_ROOT = find_repo_root()
-sys.path.insert(0, os.path.join(REPO_ROOT, "setup"))
-from config import get_config
-cfg = get_config()
-spark.sql(f"USE CATALOG {cfg['CATALOG']}")
-print("Catalog:", cfg["CATALOG"])"""),
-
 md("""## 2.1 — Way #1: Discover with Unity Catalog
 
 **Unity Catalog** is your governed data explorer. Everything is organized as
-**Catalog → Schema → Table → Column**, with permissions and lineage built in.
+**Catalog → Schema → Table → Column**, with permissions and lineage built in — and
+you browse it all in the UI, no code needed.
 
 ### Do it in the UI
 1. Left sidebar → **Catalog**.
-2. Expand **`retail_corp`** → **`bronze`**.
-3. Click each table (e.g. `fact_orders`) and explore the tabs:
-   - **Overview / Columns** — column names & types.
-   - **Sample Data** — a preview of real rows.
-   - **Details** — owner, size, created date.
-   - **Lineage** — where the data came from and what depends on it.
-   - **Insights / Permissions** — who can access it.
+2. Expand **`retail_corp`** → **`bronze`**. You'll see the six tables you ingested.
+3. Click **`fact_orders`** and explore the tabs across the top:
+   - **Overview / Columns** — column names, types, and (once you add them in 2.3)
+     descriptions.
+   - **Sample Data** — a preview of real rows, so you know what the data looks like.
+   - **Details** — owner, size, created date, row count.
+   - **Lineage** — where the data came from (your Lab 1 ingestion) and what depends
+     on it.
+   - **Insights / Permissions** — who can access it and how it's used.
+4. Repeat for a couple of other tables (e.g. `dim_product`, `fact_marketing_campaigns`)
+   so you get a feel for the whole dataset.
 
-### Do it in code
-The same information is available via SQL — handy for a quick scan."""),
-
-code("""# List everything in the catalog
-display(spark.sql(f"SHOW SCHEMAS IN {cfg['CATALOG']}"))"""),
-
-code("""display(spark.sql(f"SHOW TABLES IN {cfg['CATALOG_BRONZE']}"))"""),
-
-code("""# Inspect the columns of one table
-display(spark.sql(f"DESCRIBE TABLE {cfg['CATALOG_BRONZE']}.fact_orders"))"""),
-
-code("""# information_schema is the SQL-standard way to browse metadata across tables
-display(spark.sql(f'''
-    SELECT table_name, column_name, data_type, comment
-    FROM {cfg['CATALOG']}.information_schema.columns
-    WHERE table_schema = 'bronze'
-    ORDER BY table_name, ordinal_position
-'''))"""),
+> 🔎 **Use search.** The **Search** box at the top of Catalog lets you find a table or
+> column by name across the whole workspace — handy when you don't know where
+> something lives."""),
 
 md("""## 2.2 — Find the metadata gaps
 
-Notice in the result above that most `comment` values are **empty**. That means a
-teammate browsing the catalog has no idea what, say, `attributed_revenue_usd`
-means. Good data discovery requires good **metadata**.
+As you click through the tables in 2.1, notice that most columns have **no
+description**. A teammate browsing the catalog has no idea what, say,
+`attributed_revenue_usd` means. Good data discovery requires good **metadata**.
 
-Let's programmatically find which tables and columns are missing descriptions."""),
+### Do it in the UI
+1. In **Catalog**, open **`retail_corp.bronze.fact_marketing_campaigns`**.
+2. Look at the **Columns** tab — the **Comment** column is mostly empty.
+3. Click the table name's **description** area at the top — it's blank too.
 
-code("""tables_missing_comment = []
-cols_missing = spark.sql(f'''
-    SELECT table_name, column_name
-    FROM {cfg['CATALOG']}.information_schema.columns
-    WHERE table_schema = 'bronze' AND (comment IS NULL OR comment = '')
-    ORDER BY table_name, ordinal_position
-''')
-print("Columns missing a description:")
-display(cols_missing)"""),
+That's the gap you'll fix next. Undocumented data is hard for people *and* for Genie
+(Lab 2.4) to use correctly."""),
 
-md("""## 2.3 — Add metadata (descriptions)
+md("""## 2.3 — Add metadata (descriptions) — with AI, in the UI
 
-Now we fix it. We'll add a **table comment** and **column comments** to each bronze
-table. Well-described data is easier to discover — and, importantly, **Genie gets
-much smarter** when tables and columns have good descriptions.
+Databricks can **write the descriptions for you** with AI, right in the Catalog UI.
+This is the business-friendly way to document data — no SQL.
 
-> 💡 You can also do this in the UI: open a table in **Catalog**, click the pencil
-> ✏️ next to the description, and (on many workspaces) click **AI generate** to let
-> Databricks suggest a description. Here we set them explicitly with SQL so the labs
-> are reproducible."""),
+### Do it in the UI (AI-generated descriptions)
+1. In **Catalog**, open a table, e.g. **`bronze.dim_product`**.
+2. Next to the table's (empty) description, click **✨ AI generate**. Databricks
+   proposes a description from the table's columns and sample data. Review it, edit if
+   needed, and **Accept**.
+3. On the **Columns** tab, click **✨ AI generate** to suggest descriptions for **all
+   columns** at once (or click the pencil ✏️ on a single column to write your own).
+   Review and **Accept** the ones that look right.
+4. Repeat for the other bronze tables — especially `fact_orders`, `fact_order_items`,
+   `fact_marketing_campaigns`, and `fact_sales_forecast`.
 
-code("""B = cfg["CATALOG_BRONZE"]
+### What good descriptions look like
+Use these as a guide (edit the AI's suggestions toward this level of clarity):
 
-# --- Table-level comments ---
-table_comments = {
-    "dim_product": "Product catalog for Databricks Retail Corp. One row per merch SKU across 5 categories.",
-    "dim_customer": "E-commerce customer master. One row per registered customer.",
-    "fact_orders": "Order headers. One row per order placed on the online store.",
-    "fact_order_items": "Order line items. One row per product within an order.",
-    "fact_marketing_campaigns": "Marketing campaigns by category and month, with spend and attributed revenue.",
-    "fact_sales_forecast": "Forward-looking revenue forecast by category and month, provided by the Data Science team. Treat as an external hand-off to be validated, not ground truth.",
-}
-for t, c in table_comments.items():
-    spark.sql(f"COMMENT ON TABLE {B}.{t} IS '{c}'")
-    print("✓ described table", t)"""),
+| Column | Good description |
+|--------|------------------|
+| `dim_product.unit_cost` | Cost to the company per unit in USD (used to compute profit). |
+| `fact_orders.order_status` | COMPLETED, RETURNED, or CANCELLED. |
+| `fact_order_items.unit_price` | Actual price paid per unit in USD (after any discount). |
+| `fact_marketing_campaigns.attributed_revenue_usd` | Revenue attributed to the campaign in USD (used for marketing ROI). |
+| `fact_sales_forecast` (table) | Revenue forecast by category/month from the Data Science team — treat as a hand-off to validate, not ground truth. |
 
-code("""# --- Column-level comments ---
-column_comments = {
-    "dim_product": {
-        "product_id": "Unique product identifier (primary key).",
-        "product_name": "Display name of the merch item.",
-        "category": "Merch category: Outerwear, T-Shirts & Tops, Headwear, Accessories, Drinkware.",
-        "subcategory": "Finer product grouping within a category (e.g. Hoodie, Cap).",
-        "list_price": "Standard selling price in USD before discounts.",
-        "unit_cost": "Cost to the company per unit in USD (used to compute profit).",
-        "launch_date": "Date the product was first offered for sale.",
-        "is_active": "Whether the product is currently sold.",
-    },
-    "fact_orders": {
-        "order_id": "Unique order identifier (primary key).",
-        "customer_id": "Customer who placed the order (FK to dim_customer).",
-        "order_date": "Calendar date the order was placed.",
-        "order_ts": "Exact timestamp the order was placed.",
-        "channel": "Sales channel: Web, Mobile App, or Marketplace.",
-        "order_status": "COMPLETED, RETURNED, or CANCELLED.",
-        "shipping_cost": "Shipping charged to the customer in USD.",
-    },
-    "fact_order_items": {
-        "order_item_id": "Unique line-item identifier (primary key).",
-        "order_id": "Order this line belongs to (FK to fact_orders).",
-        "product_id": "Product sold on this line (FK to dim_product).",
-        "quantity": "Units of the product on this line.",
-        "unit_price": "Actual price paid per unit in USD (after any discount).",
-        "discount_amount": "Total discount applied to this line in USD.",
-    },
-    "fact_marketing_campaigns": {
-        "campaign_id": "Unique campaign identifier (primary key).",
-        "campaign_name": "Human-readable campaign name.",
-        "category": "Merch category the campaign promoted (FK-like to dim_product.category).",
-        "channel": "Marketing channel: Paid Search, Paid Social, Email, Display.",
-        "spend_usd": "Amount spent on the campaign in USD.",
-        "attributed_revenue_usd": "Revenue attributed to the campaign in USD (used for marketing ROI).",
-        "conversions": "Number of purchases attributed to the campaign.",
-    },
-}
-for t, cols in column_comments.items():
-    for col, c in cols.items():
-        spark.sql(f"COMMENT ON COLUMN {B}.{t}.{col} IS '{c}'")
-    print(f"✓ described {len(cols)} columns on {t}")"""),
+> 💡 **Why this matters:** Genie (next section) reads these descriptions to understand
+> intent. Ten minutes documenting your data here pays off every time you or a colleague
+> asks Genie a question.
 
-code("""# Re-check: far fewer gaps now (we intentionally described the important columns)
-display(spark.sql(f'''
-    SELECT table_name, COUNT(*) AS columns_missing_desc
-    FROM {cfg['CATALOG']}.information_schema.columns
-    WHERE table_schema = 'bronze' AND (comment IS NULL OR comment = '')
-    GROUP BY table_name ORDER BY table_name
-'''))"""),
+> ✅ **Confirm:** re-open a table's **Columns** tab and check the **Comment** column is
+> now filled in. Your data is self-explanatory."""),
 
 md("""## 2.4 — Way #2: Discover with Genie One (natural language)
 
@@ -223,39 +148,21 @@ assets into a **business-friendly** collection — e.g. *"Retail Sales & Marketi
    confirm you can preview it — you're now reaching your data **by business area**,
    which is how a non-technical colleague would naturally look for it.
 
-> 🧭 **If Domains aren't enabled** in your workspace, that's an admin feature
-> toggle. You can still complete every later lab — Domains are about *organization*,
-> not a hard dependency. As a lightweight stand-in, you can **tag** the schema
-> (Catalog → schema → Tags) with `domain=retail_sales_marketing`."""),
-
-code("""# Lightweight, reproducible stand-in for a domain: tag the schema and tables
-# so they're discoverable by a business label even without the Domains UI.
-B = cfg["CATALOG_BRONZE"]
-try:
-    spark.sql(f"ALTER SCHEMA {B} SET TAGS ('domain' = 'Retail Sales & Marketing')")
-    for t in cfg["BRONZE_TABLES"]:
-        spark.sql(f"ALTER TABLE {B}.{t} SET TAGS ('domain' = 'Retail Sales & Marketing')")
-    print("✓ Tagged the bronze schema and tables with domain = 'Retail Sales & Marketing'.")
-    print("  (In the UI you'd formalize this as a Domain per the steps above.)")
-except Exception as e:
-    print("Tagging not available here:", str(e)[:150])
-    print("→ Use the Domains UI steps above instead.")"""),
+> 🏷️ **Lightweight alternative — tags.** If Domains aren't enabled in your workspace,
+> you can still group assets by a business label: in **Catalog**, open the `bronze`
+> schema (or each table) → **Tags** → add a tag like `domain` = `Retail Sales &
+> Marketing`. Later you can **search** by that tag to pull the group back up. Domains
+> are about *organization*, so this is a fine stand-in and no later lab depends on it."""),
 
 md("""## 2.6 — Rediscover through the domain (confirm)
 
-Confirm your assets are now findable by their business label. In the UI you'd
-browse the **Domain**; in code we can list everything tagged with our domain."""),
+Confirm your assets are now findable by their business label — all in the UI:
 
-code("""try:
-    display(spark.sql(f'''
-        SELECT table_name, tag_name, tag_value
-        FROM {cfg['CATALOG']}.information_schema.table_tags
-        WHERE tag_name = 'domain'
-        ORDER BY table_name
-    '''))
-except Exception as e:
-    print("Tag lookup view not available here:", str(e)[:150])
-    print("→ Browse the Domain in the Catalog UI to confirm your assets are grouped.")"""),
+1. Open the **Domain** you created (or **Search** for the `domain` tag you added).
+2. You should see the bronze tables grouped under **Retail Sales & Marketing**.
+3. Click a table (e.g. `fact_marketing_campaigns`) straight from the domain view and
+   confirm you can preview it. You're now reaching data **by business area** — exactly
+   how a non-technical colleague would look for it."""),
 
 md("""## 2.7 — Your Data Map: what these tables can (and can't) answer
 

@@ -28,65 +28,42 @@ You'll create dashboards for:
 
 ⏱️ *Estimated time: 35–45 minutes.*"""),
 
-md("""## 6.0 — Load config & confirm the gold tables"""),
+md("""## 6.1 — The data behind your dashboards
 
-code("""import os, sys
-def find_repo_root():
-    p = os.getcwd()
-    for _ in range(6):
-        if os.path.isdir(os.path.join(p, "setup")) and os.path.isdir(os.path.join(p, "labs")):
-            return p
-        p = os.path.dirname(p)
-    return os.getcwd()
-REPO_ROOT = find_repo_root()
-sys.path.insert(0, os.path.join(REPO_ROOT, "setup"))
-from config import get_config
-cfg = get_config()
-spark.sql(f"USE CATALOG {cfg['CATALOG']}")
-G = cfg["CATALOG_GOLD"]
-for t in ["daily_revenue", "category_performance"]:
-    print(f"{G}.{t}:", spark.table(f"{G}.{t}").count(), "rows")"""),
+Your dashboards read straight from the **gold** tables you built in Lab 3:
+`retail_corp.gold.daily_revenue` and `retail_corp.gold.category_performance`.
 
-md("""## 6.1 — Prep: a couple of dashboard-ready views
+For a couple of charts it's handy to have **two small ready-made queries**. You'll
+paste these as **dataset SQL** directly inside the dashboard editor (both build
+paths below show exactly where) — no need to create anything ahead of time.
 
-Dashboards are easiest when each chart maps to a tidy query. Let's add two small
-helper views on top of gold so both the Genie-Code and manual paths have clean
-sources. (These are optional conveniences — you could also write the SQL directly
-in the dashboard.)"""),
-
-code("""G = cfg["CATALOG_GOLD"]
-
-# Daily operating margin across the whole business (all categories combined)
-spark.sql(f'''
-CREATE OR REPLACE VIEW {G}.v_daily_business AS
+**Query 1 — daily business totals** (revenue, profit, operating margin per day):
+```sql
 SELECT order_date,
        SUM(daily_revenue) AS revenue,
        SUM(daily_profit)  AS profit,
        ROUND(100 * SUM(daily_profit) / NULLIF(SUM(daily_revenue),0), 1) AS operating_margin_pct,
        SUM(daily_units)   AS units
-FROM {G}.daily_revenue
+FROM retail_corp.gold.daily_revenue
 GROUP BY order_date
-''')
+ORDER BY order_date
+```
 
-# Top products by profit (for the "top 5" dashboard). Built from silver.sales.
-S = cfg["CATALOG_SILVER"]
-spark.sql(f'''
-CREATE OR REPLACE VIEW {G}.v_product_performance AS
+**Query 2 — product performance** (for the top-5 chart):
+```sql
 SELECT product_name, category,
        ROUND(SUM(line_revenue),2) AS revenue,
        ROUND(SUM(line_profit),2)  AS profit,
        SUM(quantity)              AS units
-FROM {S}.sales
+FROM retail_corp.silver.sales
 GROUP BY product_name, category
-''')
-
-print("✓ created helper views: v_daily_business, v_product_performance")
-display(spark.sql(f"SELECT * FROM {G}.v_product_performance ORDER BY profit DESC LIMIT 5"))"""),
+ORDER BY profit DESC
+```"""),
 
 md("""## 6.2 — Way #1: Build a dashboard with Genie Code
 
 **Genie Code** can generate dashboard SQL + chart specs from plain English. This is
-the fastest path for a business user.
+the fastest path for a business user — entirely in the UI.
 
 ### Steps
 1. Left sidebar → **Dashboards** → **Create dashboard**. Name it
@@ -96,11 +73,10 @@ the fastest path for a business user.
    > *"From `retail_corp.gold.daily_revenue`, give me daily total revenue across all
    > categories, ordered by date."*
 
-   > *"From `retail_corp.gold.v_daily_business`, show operating margin percent by
-   > day."*
+   > *"Show operating margin percent by day: 100 × profit ÷ revenue from
+   > `retail_corp.gold.daily_revenue`, grouped by order_date."*
 
-   > *"From `retail_corp.gold.v_product_performance`, show the top 5 products by
-   > profit."*
+   > *"From `retail_corp.silver.sales`, show the top 5 products by total profit."*
 3. For each dataset, click **+ Add visualization** and either let Genie **suggest a
    chart** ("visualize this as a line chart by date") or pick the type yourself.
 4. Arrange the three charts on the canvas. **Publish.**
@@ -111,78 +87,55 @@ the fastest path for a business user.
 md("""## 6.3 — Way #2: Build a dashboard the standard way (on gold tables)
 
 Now the fully manual path, so you understand what Genie Code was doing for you.
-You'll build **three widgets** on your gold tables.
+You'll build **three widgets** on your gold tables — all in the dashboard editor.
 
 ### Create the dashboard
 1. **Dashboards → Create dashboard**, name it **`Retail Corp — Daily KPIs`**.
-2. Go to the **Data** tab and add **datasets** (each is a SQL query). Use the three
-   queries below — the next cells let you **preview exactly what each widget will
-   show** before you paste the SQL into the dashboard.
+2. Go to the **Data** tab → **Create from SQL**. Paste **Query 1** from 6.1 and name
+   the dataset `daily_business`. Add a second dataset from **Query 2** named
+   `product_performance`.
+3. Go to the **Canvas** tab and add the three widgets below, pointing each at a
+   dataset.
 
 ### Widget A — 📈 Daily revenue (line chart)
-- Dataset SQL: select `order_date`, `revenue` from `gold.v_daily_business`.
+- Dataset: `daily_business`.
 - Visualization: **Line**, X = `order_date`, Y = `revenue`.
 
-### Widget B — 📊 Operating margin (line or KPI)
-- Dataset SQL: select `order_date`, `operating_margin_pct` from `gold.v_daily_business`.
+### Widget B — 📊 Operating margin (line + KPI)
+- Dataset: `daily_business`.
 - Visualization: **Line**, X = `order_date`, Y = `operating_margin_pct`.
-  Add a **Counter/KPI** widget for the latest margin, too.
+  Add a **Counter** widget on the same dataset showing the **latest**
+  `operating_margin_pct` as a headline KPI.
 
 ### Widget C — 🏆 Top-5 products by profit (bar chart)
-- Dataset SQL: top 5 rows of `gold.v_product_performance` by `profit`.
-- Visualization: **Bar**, X = `product_name`, Y = `profit`.
+- Dataset: `product_performance`.
+- Visualization: **Bar**, X = `product_name`, Y = `profit`. In the widget's settings
+  set a **row limit of 5** (the query is already sorted by profit).
 
-> The cells below preview each widget's data so you can confirm it looks right."""),
-
-code("""# Preview Widget A — Daily revenue
-G = cfg["CATALOG_GOLD"]
-display(spark.sql(f'''
-    SELECT order_date, revenue
-    FROM {G}.v_daily_business
-    ORDER BY order_date
-'''))"""),
-
-code("""# Preview Widget B — Operating margin by day (+ latest value as a KPI)
-G = cfg["CATALOG_GOLD"]
-display(spark.sql(f'''
-    SELECT order_date, operating_margin_pct
-    FROM {G}.v_daily_business
-    ORDER BY order_date
-'''))
-latest = spark.sql(f'''
-    SELECT operating_margin_pct FROM {G}.v_daily_business
-    ORDER BY order_date DESC LIMIT 1
-''').collect()[0]["operating_margin_pct"]
-print(f"Latest operating margin (use as a Counter/KPI widget): {latest}%")"""),
-
-code("""# Preview Widget C — Top 5 products by profit
-G = cfg["CATALOG_GOLD"]
-display(spark.sql(f'''
-    SELECT product_name, category, profit, revenue, units
-    FROM {G}.v_product_performance
-    ORDER BY profit DESC
-    LIMIT 5
-'''))"""),
+> 💡 **Confirm as you go:** each widget previews live as you configure it — if a chart
+> looks empty, re-check the dataset's SQL ran (green tick in the Data tab)."""),
 
 md("""## 6.4 — Bonus: category view that supports your Lab 5 decision
 
-A dashboard that visualizes **profit and marketing ROI by category** makes your
-promotion recommendation obvious at a glance. Add this as a fourth widget (bar
-chart, X = category, Y = profit; add ROI as a second series or a table)."""),
+A chart of **profit and marketing ROI by category** makes your promotion
+recommendation obvious at a glance. Add a fourth widget:
 
-code("""G = cfg["CATALOG_GOLD"]
-display(spark.sql(f'''
-    SELECT category,
-           ROUND(total_profit,0)   AS profit,
-           ROUND(total_revenue,0)  AS revenue,
-           profit_margin_pct,
-           units_sold,
-           marketing_roi
-    FROM {G}.category_performance
-    ORDER BY profit DESC
-'''))
-print("This single view captures your decision case: the top-profit category also")
-print("leads on marketing ROI — while units and margin % tell a different story.")"""),
+- New dataset SQL:
+  ```sql
+  SELECT category,
+         ROUND(total_profit,0)  AS profit,
+         ROUND(total_revenue,0) AS revenue,
+         profit_margin_pct,
+         units_sold,
+         marketing_roi
+  FROM retail_corp.gold.category_performance
+  ORDER BY profit DESC
+  ```
+- Visualization: **Bar**, X = `category`, Y = `profit`; add `marketing_roi` as a
+  second series or a small table beside it.
+
+> 🧠 This single chart captures your decision case: the top-**profit** category also
+> leads on **marketing ROI** — while units and margin % tell a different story."""),
 
 md("""## 6.5 — Schedule & share
 
