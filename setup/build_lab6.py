@@ -18,8 +18,10 @@ interactive, always-fresh, shareable.
 
 You'll build dashboards **two ways**, so you know both:
 1. **With Genie Code** — describe the chart in plain English; Genie writes it.
-2. **With the standard dashboard workflow** — build datasets + widgets by hand on
-   your **gold** tables.
+2. **With the standard dashboard workflow** — build datasets + widgets by hand.
+
+Both read from your **Lab 4 metric views** — the *single source of truth* — so the
+dashboards show the **exact same numbers** as Genie in Lab 5.
 
 You'll create dashboards for:
 - 📈 **Daily revenue**
@@ -30,35 +32,41 @@ You'll create dashboards for:
 
 md("""## 6.1 — The data behind your dashboards
 
-Your dashboards read straight from the **gold** tables you built in Lab 3:
-`retail_corp.gold.daily_revenue` and `retail_corp.gold.category_performance`.
+Your dashboards read from the **metric views** you built in Lab 4 —
+`retail_corp.gold.retail_metrics_sales` and `retail_corp.gold.retail_metrics_marketing`
+— **not** raw tables. Every chart therefore uses the company's agreed KPI definitions
+(revenue, profit, margin, marketing ROI), so a number on a dashboard always matches
+the same number in Genie.
 
-For a couple of charts it's handy to have **two small ready-made queries**. You'll
-paste these as **dataset SQL** directly inside the dashboard editor (both build
-paths below show exactly where) — no need to create anything ahead of time.
+You'll paste these **ready-made queries** as **dataset SQL** directly inside the
+dashboard editor (both build paths below show exactly where) — nothing to create
+ahead of time. Each one just groups a metric view's measures by its dimensions.
 
 **Query 1 — daily business totals** (revenue, profit, operating margin per day):
 ```sql
-SELECT order_date,
-       SUM(daily_revenue) AS revenue,
-       SUM(daily_profit)  AS profit,
-       ROUND(100 * SUM(daily_profit) / NULLIF(SUM(daily_revenue),0), 1) AS operating_margin_pct,
-       SUM(daily_units)   AS units
-FROM retail_corp.gold.daily_revenue
-GROUP BY order_date
-ORDER BY order_date
+SELECT Order_Date AS order_date,
+       SUM(Total_Revenue) AS revenue,
+       SUM(Total_Profit)  AS profit,
+       ROUND(100 * SUM(Total_Profit) / NULLIF(SUM(Total_Revenue),0), 1) AS operating_margin_pct
+FROM retail_corp.gold.retail_metrics_sales
+GROUP BY Order_Date
+ORDER BY Order_Date
 ```
 
 **Query 2 — product performance** (for the top-5 chart):
 ```sql
-SELECT product_name, category,
-       ROUND(SUM(line_revenue),2) AS revenue,
-       ROUND(SUM(line_profit),2)  AS profit,
-       SUM(quantity)              AS units
-FROM retail_corp.silver.sales
-GROUP BY product_name, category
+SELECT Product AS product_name, Category AS category,
+       ROUND(SUM(Total_Revenue),2) AS revenue,
+       ROUND(SUM(Total_Profit),2)  AS profit,
+       SUM(Units_Sold)             AS units
+FROM retail_corp.gold.retail_metrics_sales
+GROUP BY Product, Category
 ORDER BY profit DESC
-```"""),
+```
+
+> 🧠 **Notice:** these pull `Total_Revenue` / `Total_Profit` / `Units_Sold` **measures**
+> and slice them by the **`Order_Date`** and **`Product`** dimensions you added to the
+> metric view in Lab 4 — no raw `line_revenue` math anywhere."""),
 
 md("""## 6.2 — Way #1: Build a dashboard with Genie Code
 
@@ -69,25 +77,28 @@ the fastest path for a business user — entirely in the UI.
 1. Left sidebar → **Dashboards** → **Create dashboard**. Name it
    **`Retail Corp — Daily KPIs (Genie)`**.
 2. Add a **dataset**. In the dataset's SQL editor, open the **Assistant** (✨) and
-   describe what you want. **Type prompts like** (adapt freely):
-   > *"From `retail_corp.gold.daily_revenue`, give me daily total revenue across all
-   > categories, ordered by date."*
+   describe what you want — **point it at the metric views** so KPIs stay governed.
+   **Type prompts like** (adapt freely):
+   > *"From the metric view `retail_corp.gold.retail_metrics_sales`, give me daily
+   > Total Revenue by Order Date across all categories, ordered by date."*
 
-   > *"Show operating margin percent by day: 100 × profit ÷ revenue from
-   > `retail_corp.gold.daily_revenue`, grouped by order_date."*
+   > *"From `retail_corp.gold.retail_metrics_sales`, show operating margin percent by
+   > Order Date: 100 × Total Profit ÷ Total Revenue, grouped by Order Date."*
 
-   > *"From `retail_corp.silver.sales`, show the top 5 products by total profit."*
+   > *"From `retail_corp.gold.retail_metrics_sales`, show the top 5 Products by Total
+   > Profit."*
 3. For each dataset, click **+ Add visualization** and either let Genie **suggest a
    chart** ("visualize this as a line chart by date") or pick the type yourself.
 4. Arrange the three charts on the canvas. **Publish.**
 
-> 🧠 **Tip:** Genie Code is great for first drafts. You can always click into the
-> generated SQL to tweak filters (e.g. last 90 days) or rename fields."""),
+> 🧠 **Tip:** name the metric view explicitly in your prompt (as above) so Genie
+> aggregates the governed measures instead of reaching for a raw table. You can always
+> click into the generated SQL to tweak filters (e.g. last 90 days) or rename fields."""),
 
-md("""## 6.3 — Way #2: Build a dashboard the standard way (on gold tables)
+md("""## 6.3 — Way #2: Build a dashboard the standard way (on the metric views)
 
 Now the fully manual path, so you understand what Genie Code was doing for you.
-You'll build **three widgets** on your gold tables — all in the dashboard editor.
+You'll build **three widgets** on the **metric views** — all in the dashboard editor.
 
 ### Create the dashboard
 1. **Dashboards → Create dashboard**, name it **`Retail Corp — Daily KPIs`**.
@@ -118,24 +129,34 @@ You'll build **three widgets** on your gold tables — all in the dashboard edit
 md("""## 6.4 — Bonus: category view that supports your Lab 5 decision
 
 A chart of **profit and marketing ROI by category** makes your promotion
-recommendation obvious at a glance. Add a fourth widget:
+recommendation obvious at a glance. It combines **both** metric views — profit from
+`retail_metrics_sales`, ROI from `retail_metrics_marketing` — so it's fully governed.
+Add a fourth widget:
 
-- New dataset SQL:
+- New dataset SQL (joins the two metric views on Category):
   ```sql
-  SELECT category,
-         ROUND(total_profit,0)  AS profit,
-         ROUND(total_revenue,0) AS revenue,
-         profit_margin_pct,
-         units_sold,
-         marketing_roi
-  FROM retail_corp.gold.category_performance
+  SELECT s.Category                                   AS category,
+         ROUND(SUM(s.Total_Profit), 0)                AS profit,
+         ROUND(SUM(s.Total_Revenue), 0)               AS revenue,
+         ROUND(100*SUM(s.Total_Profit)/SUM(s.Total_Revenue), 1) AS profit_margin_pct,
+         SUM(s.Units_Sold)                            AS units_sold,
+         ROUND(MAX(m.marketing_roi), 2)               AS marketing_roi
+  FROM retail_corp.gold.retail_metrics_sales s
+  LEFT JOIN (
+      SELECT Category,
+             SUM(Attributed_Revenue)/SUM(Marketing_Spend) AS marketing_roi
+      FROM retail_corp.gold.retail_metrics_marketing
+      GROUP BY Category
+  ) m ON s.Category = m.Category
+  GROUP BY s.Category
   ORDER BY profit DESC
   ```
 - Visualization: **Bar**, X = `category`, Y = `profit`; add `marketing_roi` as a
   second series or a small table beside it.
 
-> 🧠 This single chart captures your decision case: the top-**profit** category also
-> leads on **marketing ROI** — while units and margin % tell a different story."""),
+> 🧠 This single chart captures your decision case — and every number traces back to a
+> Lab 4 metric view: the top-**profit** category also leads on **marketing ROI**,
+> while units and margin % tell a different story."""),
 
 md("""## 6.5 — Schedule & share
 
@@ -150,8 +171,10 @@ Make the dashboard a living asset:
 md("""## ✅ Lab 6 complete — and training complete! 🎉
 
 - ✅ Built dashboards **two ways**: with **Genie Code** and the **standard workflow**
+- ✅ Sourced **every chart from the Lab 4 metric views** — dashboards and Genie show
+  the same governed numbers
 - ✅ Visualized **daily revenue**, **operating margin**, and **top-5 performers**
-- ✅ Added a **category profit + marketing ROI** view that backs your decision
+- ✅ Added a **category profit + marketing ROI** chart that backs your decision
 - ✅ **Scheduled & shared** so the company tracks KPIs daily
 
 ---

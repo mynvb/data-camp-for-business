@@ -38,13 +38,17 @@ In this lab you will:
 
 md("""## 5.0 — What you'll build a Genie Space over
 
-This lab is mostly done in the **Genie** UI. Your Genie Space will use these assets
-(all created in earlier labs):
+This lab is mostly done in the **Genie** UI. Your Genie Space is built on the
+**metric views** from Lab 4 — they are the **single source of truth** for every KPI:
 
-- `retail_corp.gold.retail_metrics_sales` — **metric view** (Lab 4)
-- `retail_corp.gold.retail_metrics_marketing` — **metric view** (Lab 4)
-- `retail_corp.gold.category_performance` — **gold table** (Lab 3)
-- `retail_corp.gold.daily_revenue` — **gold table** (Lab 3)
+- `retail_corp.gold.retail_metrics_sales` — **metric view** (Lab 4): revenue, cost,
+  profit, margin %, units — sliceable by Category, Channel, Product, Order Date, Month.
+- `retail_corp.gold.retail_metrics_marketing` — **metric view** (Lab 4): marketing
+  spend, attributed revenue, ROI, conversions — by Category and Channel.
+
+That's **all** the Space needs. Because the metric views carry Product and Order Date
+dimensions, they answer daily trends and top-product questions too — so you do **not**
+add the raw gold/silver tables (that would let someone bypass the agreed definitions).
 
 > The only place code appears in this lab is the **optional** forecasting section
 > (5.5–5.6), because `ai_forecast()` and the forecast-comparison have no point-and-click
@@ -54,16 +58,19 @@ md("""## 5.1 — Create a Genie Space
 
 1. Left sidebar → **Genie** → **New** (Genie Space).
 2. Name it **`Retail Corp — Category Decision`**.
-3. **Add data.** This is the most important choice — add:
-   - ✅ your **metric views** `gold.retail_metrics_sales` and
-     `gold.retail_metrics_marketing`
-   - ✅ the gold tables `gold.category_performance` and `gold.daily_revenue`
+3. **Add data.** Add **only the two metric views** — this is the most important choice:
+   - ✅ `gold.retail_metrics_sales`
+   - ✅ `gold.retail_metrics_marketing`
+   Do **not** add the raw `silver.*` or `gold.category_performance` / `daily_revenue`
+   tables. Keeping the Space to the metric views guarantees every answer uses the
+   company's agreed KPI definitions.
 4. Pick a **Serverless SQL Warehouse** for the Space to run on.
 5. Save.
 
-> 🧠 **Why start from metric views?** When Genie answers "what's our profit margin
-> by category?", it should use the **agreed** definition from Lab 4 — not invent a
-> formula. Metric views make Genie's answers *governed and consistent*."""),
+> 🧠 **Why metric-views-only?** When Genie answers "what's our profit margin by
+> category?", it should use the **agreed** definition from Lab 4 — not invent a
+> formula or read a raw table. Restricting the Space to the metric views makes every
+> answer *governed, consistent, and traceable* to a single definition."""),
 
 md("""## 5.2 — Make sure Genie USES your Metric Views (from Lab 4)
 
@@ -149,7 +156,9 @@ tool for this: the built-in **`ai_forecast()`** SQL function. You hand it histor
 time-series data and it returns a forecast — **no data-science background required**.
 
 ### What `ai_forecast()` does (plain English)
-- **Input:** a time series — here, monthly revenue per category from your gold table.
+- **Input:** a time series — here, monthly revenue per category, taken from your
+  **`retail_metrics_sales` metric view** so the forecast uses the same governed
+  revenue definition as everything else.
 - **Output:** predicted values for future periods, plus an **upper/lower bound**
   (the uncertainty range).
 - It picks a sensible model for you under the hood. You just describe the horizon.
@@ -202,17 +211,21 @@ cfg = get_config()
 spark.sql(f"USE CATALOG {cfg['CATALOG']}")
 print("Config loaded for forecasting. Gold:", cfg["CATALOG_GOLD"])"""),
 
-code("""# Build the monthly revenue history per category from your GOLD daily table,
-# then forecast the next 3 months with ai_forecast(). Falls back gracefully.
+code("""# Build the monthly revenue history per category FROM THE METRIC VIEW — so the
+# forecast is based on the same governed 'Total Revenue' definition as everything
+# else (Lab 4), not a re-derived number. Then forecast 3 months with ai_forecast().
 G = cfg["CATALOG_GOLD"]
 fc_created = False
 
+# Query the metric view: its 'Order Month' dimension + 'Total Revenue' measure.
+# (Column names come through as Order_Month / Total_Revenue on both the true metric
+# view and the Lab 4 fallback view.)
 hist_sql = f'''
-    SELECT date_trunc('MONTH', order_date) AS month,
-           category,
-           SUM(daily_revenue)              AS revenue
-    FROM {G}.daily_revenue
-    GROUP BY date_trunc('MONTH', order_date), category
+    SELECT CAST(Order_Month AS DATE) AS month,
+           Category                  AS category,
+           SUM(Total_Revenue)        AS revenue
+    FROM {G}.retail_metrics_sales
+    GROUP BY CAST(Order_Month AS DATE), Category
 '''
 
 # Create the history as a view first so ai_forecast (and section 5.6) can reference it.
@@ -439,8 +452,9 @@ md("""## ✅ Lab 5 complete
 - ✅ Reached a **defensible recommendation** for the Q4 promotion
 
 **Next up → Lab 6: Visualizing the data.** You'll turn the KPIs behind your decision
-into **AI/BI dashboards** so the whole company can track them daily — built two ways:
-with **Genie Code** and with the **standard dashboard workflow** on your gold tables.""")
+into **AI/BI dashboards** so the whole company can track them daily — built two ways
+(with **Genie Code** and the **standard dashboard workflow**), both reading from the
+same **metric views** so the dashboards show the exact same numbers as Genie.""")
 ]
 
 out = os.path.join(ROOT, "labs", "Lab 5 - Decision Making.ipynb")

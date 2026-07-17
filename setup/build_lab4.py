@@ -59,7 +59,7 @@ md("""## 4.1 — What is a Metric View?
 A **Metric View** is a Unity Catalog object defined in **YAML** that separates two
 things:
 
-- **Dimensions** — the ways you *slice* data (category, channel, month…).
+- **Dimensions** — the ways you *slice* data (category, channel, product, date…).
 - **Measures** — the *calculations* everyone agrees on (revenue, profit, margin,
   marketing ROI…), written **once**.
 
@@ -138,6 +138,10 @@ dimensions:
     expr: channel
   - name: Subcategory
     expr: subcategory
+  - name: Product
+    expr: product_name
+  - name: Order Date
+    expr: order_date
   - name: Order Month
     expr: date_trunc('MONTH', order_date)
 measures:
@@ -202,6 +206,10 @@ dimensions:
     expr: channel
   - name: Subcategory
     expr: subcategory
+  - name: Product
+    expr: product_name
+  - name: Order Date
+    expr: order_date
   - name: Order Month
     expr: date_trunc('MONTH', order_date)
 measures:
@@ -257,6 +265,8 @@ made_mkt   = try_metric_view("retail_metrics_marketing", marketing_yaml)
 if not made_sales:
     spark.sql(f'''CREATE OR REPLACE VIEW {G}.retail_metrics_sales AS
         SELECT category AS Category, channel AS Channel, subcategory AS Subcategory,
+               product_name AS Product,
+               order_date AS Order_Date,
                date_trunc('MONTH', order_date) AS Order_Month,
                SUM(line_revenue) AS Total_Revenue,
                SUM(quantity*unit_cost) AS Total_Cost,
@@ -265,7 +275,8 @@ if not made_sales:
                SUM(quantity) AS Units_Sold,
                AVG(line_revenue) AS Avg_Order_Line_Value
         FROM {S}.sales
-        GROUP BY category, channel, subcategory, date_trunc('MONTH', order_date)''')
+        GROUP BY category, channel, subcategory, product_name, order_date,
+                 date_trunc('MONTH', order_date)''')
     print(f"  ↳ created fallback view {G}.retail_metrics_sales")
 if not made_mkt:
     spark.sql(f'''CREATE OR REPLACE VIEW {G}.retail_metrics_marketing AS
@@ -369,10 +380,15 @@ You now have four governed KPIs everyone will share:
 | **Profit Margin %** | `Profit ÷ Revenue × 100` | `retail_metrics_sales` |
 | **Marketing ROI** | `Attributed Revenue ÷ Marketing Spend` | `retail_metrics_marketing` |
 
+You can slice every measure by the metric view's **dimensions** — Category, Channel,
+Subcategory, **Product**, **Order Date**, and **Order Month**. Those last two
+(Product + Order Date) are what let **Lab 5's forecast** and **Lab 6's daily/top-5
+dashboards** read straight from the metric view instead of re-deriving numbers.
+
 > 🧠 **Why this matters for your decision:** now when you (or Genie, or a dashboard)
-> say "profit" or "marketing ROI," it's *the same number* every time. In Lab 5
-> you'll point a **Genie Space** at these metric views so your natural-language
-> questions return trustworthy KPIs — not ad-hoc math."""),
+> say "profit" or "marketing ROI," it's *the same number* every time. These metric
+> views are the **single source of truth** for KPIs — Labs 5 and 6 build directly on
+> them, so no one re-implements revenue or ROI with ad-hoc `SUM()`s again."""),
 
 md("""## ✅ Lab 4 complete
 
