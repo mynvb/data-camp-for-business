@@ -66,8 +66,9 @@ know where you are in the journey.
 2. **Open `labs/Lab 0 - Setup.ipynb`** inside Databricks and attach **Serverless**
    compute (or any Unity-Catalog-enabled cluster).
 3. **Run Lab 0 top to bottom.** It checks your permissions and runs a single
-   deployment script that creates the catalog, schemas, volume, bronze tables, and
-   the Lakebase instance.
+   deployment script that creates the catalog, schemas, and Volume, and provisions +
+   seeds the **Lakebase** source instance. (Bronze starts empty — you fill it in
+   Lab 1 with Lakeflow Connect.)
 4. **Do the labs in order** (0 → 7). Each builds on the previous one.
 
 > 💡 New to Databricks notebooks? Just click a cell and press **Shift+Enter** to run
@@ -88,10 +89,12 @@ At a glance you'll need:
 - Permission to **create a catalog** *or* have an admin pre-create `retail_corp` and
   grant you ownership
 - **Genie / AI-BI** and **Lakeflow** features enabled (workspace toggles)
-- *(Optional)* **Lakebase / Database Instances** enabled for Lab 1's ingestion source
+- **Lakebase / Database Instances** enabled — the operational source Lab 0 seeds and
+  Lab 1 ingests from
 
-If a feature isn't enabled, every lab has a **graceful fallback** so you can still
-learn the concept and complete the work. See the full permission table in Lab 0.
+If an *optional* feature isn't enabled, most labs have a **graceful fallback** so you
+can still learn the concept. Lakebase is **required** — it's the source of truth the
+whole pipeline is built from. See the full permission table in Lab 0.
 
 ---
 

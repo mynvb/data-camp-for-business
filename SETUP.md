@@ -20,10 +20,13 @@ copy-paste SQL for your workspace admin — you don't have to figure it out your
 - Permission to **create a catalog** *or* have an admin pre-create `retail_corp` and
   grant you ownership
 - **Genie / AI-BI** and **Lakeflow** features enabled (workspace toggles)
-- *(Optional)* **Lakebase / Database Instances** enabled for Lab 1's ingestion source
+- **Lakebase / Database Instances** enabled — the labs assume a Lakebase instance
+  exists in the account; Lab 0 provisions and seeds it as the operational source
+  system that Lab 1 ingests from with Lakeflow Connect.
 
-If a feature isn't enabled, every lab has a **graceful fallback** so you can still
-learn the concept and complete the work.
+If a feature isn't enabled, most labs still have a **graceful fallback** so you can
+learn the concept — but Lakebase is required, since it is the source of truth the
+whole medallion pipeline is built from.
 
 ### Full permission reference
 
@@ -40,7 +43,7 @@ this table is here for reference and to hand to an admin.
 | 6 | A **SQL Warehouse** you can use (Serverless recommended) | Genie, metric views, dashboards | 2, 4, 5, 6 |
 | 7 | **Lakeflow / Declarative Pipelines** entitlement | Build the medallion pipeline | 3 |
 | 8 | **Genie & AI/BI** enabled (Databricks Assistant) | Data discovery, Genie Spaces, dashboards | 2, 4, 5, 6 |
-| 9 | **Lakebase / Database Instances** enabled *(optional)* | The "source system" for Lab 1 | 1 |
+| 9 | **Lakebase / Database Instances** enabled | The operational "source system"; Lab 0 seeds it, Lab 1 ingests from it | 0, 1 |
 
 > ⚠️ **If you are NOT an admin:** you most likely have items 1–2 and can be granted
 > 3–5 easily. Items 6–9 are workspace *features* an admin toggles once. The Lab 0
@@ -50,7 +53,9 @@ this table is here for reference and to hand to an admin.
 
 ## 🗃️ The data model
 
-Your "operational" data (in Lakebase / bronze) is a small retail star schema:
+Your **operational** data lives in the **Lakebase** (Postgres) source that Lab 0
+provisions and seeds. Lab 1 ingests it into the `bronze` schema with Lakeflow
+Connect. It's a small retail star schema:
 
 | Table | Grain | Description |
 |-------|-------|-------------|
@@ -91,11 +96,11 @@ data-camp-for-business/
 │   ├── config.py                 ← ONE place to change catalog/schema names
 │   ├── check_permissions.py      ← read-only permission auditor (prints TO-DOs)
 │   ├── deploy_all.py             ← single idempotent deployment script
-│   ├── generate_seed_data.py     ← regenerates the bronze CSVs (deterministic)
+│   ├── generate_seed_data.py     ← regenerates the source CSVs (deterministic)
 │   ├── nbbuild.py                ← ipynb builder helper (maintainers only)
 │   └── build_lab*.py             ← notebook generators (maintainers only)
 ├── data/
-│   └── bronze/                   ← seed CSVs loaded into bronze in Lab 0
+│   └── bronze/                   ← seed CSVs; Lab 0 loads these into the Lakebase source
 │       ├── dim_product.csv
 │       ├── dim_customer.csv
 │       ├── fact_orders.csv

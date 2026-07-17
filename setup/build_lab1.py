@@ -66,32 +66,11 @@ Unity Catalog (your **bronze** layer = the raw, faithful copy).
 > into **silver** (Lab 3), then build business-ready **gold** tables (Lab 3). Bronze
 > = "as received."
 
-In Lab 0's deploy step, we also loaded the same tables straight into bronze so the
-labs work even if Lakebase isn't enabled in your workspace. **This lab shows you
-the *proper* ingestion path** you'd use in real life."""),
+In **Lab 0** you provisioned and seeded the **Lakebase** source, and you confirmed
+your **bronze schema is empty**. This lab is where you fill it — using the *proper*
+ingestion path you'd use in real life, rather than pre-loading."""),
 
-md("""## 1.2 — Inspect the Lakebase source instance
-
-Your Lakebase instance was provisioned in Lab 0. Let's confirm it's there and see
-its connection details. (If Lakebase isn't enabled in your workspace, this cell
-tells you — and you can safely skip to **1.5**, because the bronze tables already
-exist from Lab 0.)"""),
-
-code("""lakebase_ok = False
-try:
-    from databricks.sdk import WorkspaceClient
-    w = WorkspaceClient()
-    inst = w.database.get_database_instance(name=cfg["LAKEBASE_INSTANCE"])
-    print("✓ Lakebase instance found:", inst.name)
-    print("  state:", getattr(inst, "state", "n/a"))
-    print("  read/write DNS:", getattr(inst, "read_write_dns", "n/a"))
-    lakebase_ok = True
-except Exception as e:
-    print("! Lakebase not available in this workspace:", str(e)[:200])
-    print("  → No problem. The bronze tables from Lab 0 let you complete every lab.")
-    print("  → Skip ahead to section 1.5 and read 1.3–1.4 for understanding.")"""),
-
-md("""## 1.3 — Ingest with Lakeflow Connect (guided UI steps)
+md("""## 1.2 — Ingest with Lakeflow Connect (guided UI steps)
 
 This is the part you do **in the Databricks UI** — it's the click-through a
 business user would actually use. Follow along:
@@ -119,39 +98,30 @@ business user would actually use. Follow along:
 7. Click **Create** and then **Run**.
 
 > 🧭 **Don't see the PostgreSQL connector?** Lakeflow Connect connectors are
-> enabled per workspace. If it's missing, that's an admin toggle — for the labs
-> you can rely on the bronze tables already created in Lab 0 and continue.
+> enabled per workspace. If it's missing, that's an admin toggle — ask your
+> workspace admin to enable the Lakeflow Connect PostgreSQL/Lakebase connector,
+> then come back to this step.
 
-When the pipeline finishes, it will have written (or refreshed) the six tables in
-`retail_corp.bronze`. The next cells verify that."""),
+When the pipeline finishes, it will have written the six tables into
+`retail_corp.bronze` (which started empty after Lab 0). The next cells verify that."""),
 
-md("""## 1.4 — (Optional, technical) Ingest via code
+md("""## 1.3 — (Optional, technical) How the ingestion works under the hood
 
-Prefer to *see* the mechanics instead of clicking? This optional cell reads the
-Lakebase Postgres tables directly and writes them into bronze — essentially what
-the UI does under the hood. **Skip it if the UI path worked** or if Lakebase isn't
-enabled. It's here for the curious."""),
+Prefer to *see* the mechanics behind the UI? Conceptually, Lakeflow Connect reads
+each table from the Lakebase Postgres source and writes it into your `bronze`
+schema as a Delta table — then keeps it in sync on the schedule you chose. **Skip
+this cell if the UI path worked**; it's here for the curious."""),
 
-code("""# OPTIONAL — only runs if Lakebase is reachable. Safe to skip.
-if lakebase_ok:
-    try:
-        # Databricks can query a Lakebase instance via a registered connection.
-        # The exact connection name depends on your workspace; this demonstrates
-        # the pattern. If it errors, just use the UI path in 1.3.
-        for t in cfg["BRONZE_TABLES"]:
-            print(f"(demo) would read postgres table '{t}' and write to "
-                  f"{cfg['CATALOG_BRONZE']}.{t}")
-        print("\\nℹ️  In practice Lakeflow Connect (1.3) manages this for you,")
-        print("   including schema drift and incremental refresh.")
-    except Exception as e:
-        print("Code path not available here — use the UI path in 1.3. Detail:", str(e)[:150])
-else:
-    print("Skipped — Lakebase not enabled. Bronze tables from Lab 0 are ready.")"""),
+code("""# Informational — describes what the Lakeflow Connect pipeline (1.2) does for you.
+for t in cfg["BRONZE_TABLES"]:
+    print(f"Lakeflow Connect: Lakebase.{t}  →  {cfg['CATALOG_BRONZE']}.{t}")
+print("\\nℹ️  Lakeflow Connect manages this end to end — initial load, schema drift,")
+print("   and incremental refresh — so you don't write or maintain ingestion code.")"""),
 
-md("""## 1.5 — Verify the bronze layer
+md("""## 1.4 — Verify the bronze layer
 
-However the data got there (Lakeflow Connect UI, code, or Lab 0's loader), you
-should now have six populated bronze tables. Let's confirm."""),
+Once the Lakeflow Connect pipeline (1.2) has run, your previously-empty bronze
+schema should now hold six populated tables. Let's confirm."""),
 
 code("""from pyspark.sql import functions as F
 
@@ -182,7 +152,7 @@ display(spark.sql(f'''
     ORDER BY gross_revenue_usd DESC
 '''))"""),
 
-md("""## 1.6 — Bring in the market-research PDF
+md("""## 1.5 — Bring in the market-research PDF
 
 Your last source is the **external market-research PDF**. There are two ways it
 reaches Databricks; you'll use whichever fits:
@@ -213,8 +183,8 @@ md("""## ✅ Lab 1 complete
 
 You've connected your data sources:
 - ✅ Understood **Lakeflow Connect** and when to use it
-- ✅ Ingested the Lakebase Postgres tables into **bronze** (UI, code, or Lab 0 loader)
-- ✅ Verified all six bronze tables have data
+- ✅ Ingested the Lakebase Postgres tables into **bronze** with Lakeflow Connect
+- ✅ Verified all six bronze tables went from empty to populated
 - ✅ Located the market-research **PDF** for Lab 5
 - ✅ Took a first rough peek at revenue by category
 

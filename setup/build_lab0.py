@@ -107,10 +107,14 @@ The single call below deploys **all** the assets the labs need. It is
 **idempotent** — safe to run more than once. It will:
 
 1. Create the catalog `retail_corp` and the `bronze` / `silver` / `gold` schemas.
-2. Create a **Volume** and upload the bronze **CSV** files + the market-research **PDF**.
-3. Load the CSVs into **Unity Catalog bronze Delta tables**.
-4. Provision a **Lakebase** (managed Postgres) instance — the "operational source
-   system" that Lab 1 will ingest from with Lakeflow Connect.
+   *(Bronze starts **empty** — you'll fill it in Lab 1 with Lakeflow Connect, the
+   proper ingestion path.)*
+2. Create a **Volume** and upload the market-research **PDF**.
+3. Provision a **Lakebase** (managed Postgres) instance — the "operational source
+   system" that powers the online store.
+4. **Seed that Lakebase instance** with the operational tables (products, customers,
+   orders, marketing, forecast). This is the single source of truth Lab 1 ingests
+   *from*.
 5. Print a **deployment report**.
 
 If any step needs a permission you don't have, that step prints a TO-DO and the
@@ -119,24 +123,65 @@ script continues where it safely can."""),
 code("""from deploy_all import deploy_all
 cfg = deploy_all(cfg)"""),
 
-md("""## 0.6 — Verify the deployment
+md("""## 0.6 — Inspect the Lakebase source instance
 
-A quick sanity check that the six bronze tables exist and have data. You should
-see row counts matching the deployment report (roughly: ~17.5K orders, ~29K
-order items, 1,800 customers, 18 products, 72 campaigns, 15 DS forecast rows)."""),
+The deploy step above provisioned a **Lakebase** (Databricks-managed Postgres)
+instance and **seeded it** with your operational tables — this is the database that
+stands in for the system running the online store. In **Lab 1** you'll ingest from it
+with Lakeflow Connect, so let's confirm it's there and see its connection details."""),
+
+code("""try:
+    from databricks.sdk import WorkspaceClient
+    w = WorkspaceClient()
+    inst = w.database.get_database_instance(name=cfg["LAKEBASE_INSTANCE"])
+    print("✓ Lakebase instance found:", inst.name)
+    print("  state:", getattr(inst, "state", "n/a"))
+    print("  read/write DNS:", getattr(inst, "read_write_dns", "n/a"))
+    print("\\n  → In Lab 1 you'll connect Lakeflow Connect to this instance.")
+except Exception as e:
+    print("! Could not read the Lakebase instance:", str(e)[:200])
+    print("  → Re-run the deploy cell (0.5). Lab 1 needs this instance seeded.")"""),
+
+md("""## 0.7 — Verify the deployment
+
+Two quick checks:
+
+1. The **bronze schema is empty** — that's expected. You will fill it in Lab 1 using
+   Lakeflow Connect (the proper ingestion path), not by pre-loading.
+2. The **Lakebase source is seeded** — the operational tables the deploy step loaded
+   into Postgres are ready to be ingested (roughly: ~17.5K orders, ~29K order items,
+   1,800 customers, 18 products, 72 campaigns, 15 DS forecast rows)."""),
 
 code("""spark.sql(f"USE CATALOG {cfg['CATALOG']}")
-print("Tables in", cfg["CATALOG_BRONZE"], ":")
+print("Bronze schema (should be EMPTY until Lab 1):")
 display(spark.sql(f"SHOW TABLES IN {cfg['CATALOG_BRONZE']}"))"""),
 
-code("""for t in cfg["BRONZE_TABLES"]:
-    cnt = spark.table(f"{cfg['CATALOG_BRONZE']}.{t}").count()
-    print(f"  {t:<28} {cnt:>8,} rows")"""),
+code("""# Confirm the Lakebase Postgres source is seeded and reachable.
+try:
+    import psycopg
+    from databricks.sdk import WorkspaceClient
+    w = WorkspaceClient()
+    inst = w.database.get_database_instance(name=cfg["LAKEBASE_INSTANCE"])
+    cred = w.database.generate_database_credential(instance_names=[cfg["LAKEBASE_INSTANCE"]])
+    token = getattr(cred, "token", None) or getattr(cred, "credential", None)
+    conn = psycopg.connect(
+        host=inst.read_write_dns, port=5432, dbname=cfg["LAKEBASE_DB"],
+        user=w.current_user.me().user_name, password=token,
+        sslmode="require", autocommit=True,
+    )
+    cur = conn.cursor()
+    print("Rows in the Lakebase (Postgres) source tables:")
+    for t in cfg["BRONZE_TABLES"]:
+        n = cur.execute(f'SELECT COUNT(*) FROM "{t}"').fetchone()[0]
+        print(f"  {t:<28} {n:>8,} rows")
+    conn.close()
+    print("\\n✓ Lakebase source is ready. Continue to Lab 1 to ingest it into bronze.")
+except Exception as e:
+    print("! Could not query Lakebase yet:", str(e)[:200])
+    print("  → If deploy step 4 printed a TO-DO (e.g. install psycopg, or wait for")
+    print("    the instance to become AVAILABLE), resolve it and re-run 0.5.")"""),
 
-code("""# Peek at the product catalog — this is the merch you're selling
-display(spark.table(f"{cfg['CATALOG_BRONZE']}.dim_product"))"""),
-
-md("""## 0.7 — Download the market-research PDF (for later)
+md("""## 0.8 — Download the market-research PDF (for later)
 
 Lab 5 asks you to combine your internal data with **external market research**.
 That research lives in a PDF in this repo:
@@ -160,13 +205,14 @@ md("""## ✅ Lab 0 complete
 You now have:
 - ✅ The repo cloned into Databricks
 - ✅ Permissions verified (or clear TO-DOs)
-- ✅ Catalog `retail_corp` with `bronze`, `silver`, `gold` schemas
-- ✅ Six bronze tables loaded + a Volume with CSVs and the PDF
-- ✅ A Lakebase instance provisioned (or a graceful fallback)
+- ✅ Catalog `retail_corp` with `bronze`, `silver`, `gold` schemas (all **empty** for now)
+- ✅ A **Volume** holding the market-research PDF
+- ✅ A **Lakebase** instance provisioned and **seeded** with the operational tables
+- ✅ Bronze is intentionally empty — Lab 1 fills it from Lakebase with Lakeflow Connect
 
-> 📄 **Curious what's in these tables?** The full data model (every table, its grain,
-> and what it contains) is documented in **[SETUP.md](../SETUP.md)**. You'll also
-> explore it hands-on in Lab 2.
+> 📄 **Curious what's in the source tables?** The full data model (every table, its
+> grain, and what it contains) is documented in **[SETUP.md](../SETUP.md)**. You'll
+> also explore it hands-on in Lab 2.
 
 **Next up → Lab 1: Data Ingestion.** You'll connect to the Lakebase source with
 Lakeflow Connect and bring the market-research PDF into Databricks.""")
