@@ -98,7 +98,10 @@ except Exception as e:
 md("""## 7.3 — Delete the Lakebase instance
 
 Removes the managed Postgres instance provisioned in Lab 0
-(`retail-corp-lakebase`)."""),
+(`retail-corp-lakebase`). Deleting the instance also **destroys the operational
+source tables** the deploy step seeded into it (products, customers, orders,
+marketing, forecast) — so this wipes the source of truth the whole pipeline was
+built from."""),
 
 code("""inst_name = cfg["LAKEBASE_INSTANCE"]
 try:
@@ -133,7 +136,8 @@ md("""## 7.4 — Drop the catalog (this removes ALL tables, views, and the Volum
 
 This is the big one. Dropping the catalog with `CASCADE` removes **every** schema
 (`bronze`, `silver`, `gold`), **every** table and view (including your metric views
-and forecasts), and the **Volume** with all uploaded files (CSVs and the PDF copy).
+and the Lab 5 forecast objects), and the **Volume** with the uploaded market-research
+PDF.
 
 > 💣 After this cell runs with `CONFIRM_CLEANUP = True`, `retail_corp` and all its
 > contents are gone."""),
@@ -212,7 +216,14 @@ removed from this notebook. Delete them by hand:
    - If you created **`retail_corp_bronze_ingest`** via the UI, delete it under
      **Data Ingestion / Jobs & Pipelines** as well.
 
-6. **This Git folder / repo clone** (optional)
+6. **Lakeflow Connect / Lakebase connection** (Lab 1)
+   - Setting up ingestion often creates a **Connection** object (a metastore-level
+     securable that is **not** removed by dropping the catalog in 7.4). In **Catalog**
+     → **External Data → Connections** (or **Catalog → Connections**), find the
+     connection pointing at your Lakebase instance and **⋮ → Delete** it. Skip if you
+     didn't create one.
+
+7. **This Git folder / repo clone** (optional)
    - Left nav → **Workspace** → find your **`data-camp-for-business`** Git folder →
      **⋮ → Delete** if you no longer need the notebooks."""),
 
