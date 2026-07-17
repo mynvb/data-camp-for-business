@@ -121,10 +121,39 @@ print("   and incremental refresh — so you don't write or maintain ingestion c
 md("""## 1.4 — Verify the bronze layer
 
 Once the Lakeflow Connect pipeline (1.2) has run, your previously-empty bronze
-schema should now hold six populated tables. Let's confirm."""),
+schema should now hold six populated tables. As a business user, you can confirm
+this **entirely in the UI** — no code needed.
 
-code("""from pyspark.sql import functions as F
+### Verify in the Catalog UI
+1. In the left sidebar, click **Catalog**.
+2. Expand **`retail_corp`** → **`bronze`**. You should now see **six tables**:
+   `dim_product`, `dim_customer`, `fact_orders`, `fact_order_items`,
+   `fact_marketing_campaigns`, and `fact_sales_forecast`.
+   *(Before Lab 1 this schema was empty — seeing the tables appear is proof the
+   ingestion worked.)*
+3. Click **`fact_orders`**, then open the **Sample Data** tab to eyeball real rows.
+4. Check the **Overview** tab for the **row count** and the columns. `fact_orders`
+   should have roughly **17.5K rows**; `fact_order_items` roughly **29K**.
+5. Open the **Lineage** tab and confirm the table traces back to your **Lakeflow
+   Connect** ingestion pipeline — this is how you'd prove *where* the data came from.
 
+### Check the ingestion pipeline's run
+6. Go to **Jobs & Pipelines** (left sidebar) and open **`retail_corp_bronze_ingest`**.
+7. Confirm the latest run **succeeded** and note how many rows it wrote per table.
+   This is the dashboard you'd watch in real life to know your data is fresh.
+
+> ✅ **What "good" looks like:** all six tables present in `bronze`, each with rows,
+> and a green/successful ingestion run. If a table is missing, re-run the pipeline
+> from step 1.2."""),
+
+md("""### 1.4.1 — (Optional) Verify with code
+
+Prefer to double-check in the notebook, or want an exact row count per table? The
+cells below do the same verification the UI shows. **Skip them if the UI checks
+above looked good** — they're here for convenience and for anyone who likes numbers
+in one place."""),
+
+code("""# OPTIONAL — same check as the Catalog UI, as a quick row-count table.
 rows = []
 for t in cfg["BRONZE_TABLES"]:
     fqn = f"{cfg['CATALOG_BRONZE']}.{t}"
@@ -138,7 +167,7 @@ print("-" * 42)
 for t, c in rows:
     print(f"{t:<30}{c:>12,}" if isinstance(c, int) else f"{t:<30}{c:>12}")"""),
 
-code("""# Quick business peek: revenue by category straight from bronze.
+code("""# OPTIONAL — quick business peek: revenue by category straight from bronze.
 # (We haven't built clean silver/gold yet — this is a rough look.)
 display(spark.sql(f'''
     SELECT p.category,
