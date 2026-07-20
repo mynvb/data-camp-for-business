@@ -40,6 +40,21 @@ class OnePager(PDF):
                    self.y, RED, 1.4)
         self.y -= 12
 
+    def bullet(self, s, size=10):
+        # Flush bullet: text left-edge aligns with body paragraphs (MARGIN_X);
+        # the red marker sits in the gutter just left of the margin. Line spacing
+        # and trailing gap match para(), so bullet blocks read like the scenario.
+        MX = build_pdf.MARGIN_X
+        LINE = build_pdf.LINE
+        lines = build_pdf.wrap(s, size, build_pdf.PAGE_W - 2 * MX)
+        for i, ln in enumerate(lines):
+            self._ensure(LINE)
+            if i == 0:
+                self.text(MX - 12, self.y, "•", size, color=RED)
+            self.text(MX, self.y, ln, size, color=BLACK)
+            self.y -= LINE
+        self.y -= 4  # same trailing gap as para(gap=4)
+
 
 def render():
     p = OnePager()
@@ -73,6 +88,10 @@ def render():
              "that resets the environment for the next cohort.", size=10)
     p.bullet("Delivery: self-guided, instructor-led, or hackathon warm-up — approx. "
              "half a day end to end.", size=10)
+    p.bullet("Who it's for: business analysts, operations & finance teams, and any "
+             "data-curious business user who knows a little SQL. Ideal as an onboarding "
+             "accelerator, a pre-hackathon primer, or a proof-of-value that lands the "
+             "lakehouse story with a non-technical audience.", size=10)
 
     # ---- The labs ----
     p.h2("What participants build (the 8 labs)")
@@ -101,12 +120,7 @@ def render():
              "hand-off instead of trusting it blindly.", size=10)
     p.bullet("Build & share AI/BI dashboards the whole company tracks daily.", size=10)
 
-    p.spacer(3)
-    p.para("Who it's for:  business analysts, operations & finance teams, and any "
-           "data-curious business user who knows a little SQL. Ideal as an onboarding "
-           "accelerator, a pre-hackathon primer, or a proof-of-value that lands the "
-           "lakehouse story with a non-technical audience.", size=9.5, color=DARK, gap=2)
-
+    p.spacer(4)
     p.footer_note("Databricks Data Camp for Business Users  |  Hands-on enablement by "
                   "Databricks Field Engineering. \"Databricks Retail Corp.\" and all figures "
                   "are fictional, for instructional use only.")

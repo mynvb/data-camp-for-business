@@ -7,7 +7,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
 endobj
 3 0 obj
-<< /Length 8420 >>
+<< /Length 8481 >>
 stream
 1.000 0.212 0.129 rg
 BT
@@ -84,400 +84,406 @@ ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 573.5 Tm
+1 0 0 1 42.0 573.5 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 573.5 Tm
+1 0 0 1 54.0 573.5 Tm
 (8 self-paced labs as guided Databricks notebooks - run in order.) Tj
 ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 559.0 Tm
+1 0 0 1 42.0 557.0 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 559.0 Tm
+1 0 0 1 54.0 557.0 Tm
 (UI-first & business-friendly: click-through Databricks UI; code only where there's no UI path \(clearly marked) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 546.5 Tm
+1 0 0 1 54.0 544.5 Tm
 (optional\).) Tj
 ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 532.0 Tm
+1 0 0 1 42.0 528.0 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 532.0 Tm
+1 0 0 1 54.0 528.0 Tm
 (One-click setup: a single deploy script provisions everything; automated permission & prerequisite checks flag) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 519.5 Tm
+1 0 0 1 54.0 515.5 Tm
 (exactly what's needed.) Tj
 ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 505.0 Tm
+1 0 0 1 42.0 499.0 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 505.0 Tm
-(Safe & repeatable: synthetic data, graceful fallbacks, and a clean-up lab that resets the environment for the) Tj
+1 0 0 1 54.0 499.0 Tm
+(Safe & repeatable: synthetic data, graceful fallbacks, and a clean-up lab that resets the environment for the next) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 492.5 Tm
-(next cohort.) Tj
+1 0 0 1 54.0 486.5 Tm
+(cohort.) Tj
 ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 478.0 Tm
+1 0 0 1 42.0 470.0 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 478.0 Tm
+1 0 0 1 54.0 470.0 Tm
 (Delivery: self-guided, instructor-led, or hackathon warm-up - approx. half a day end to end.) Tj
+ET
+1.000 0.212 0.129 rg
+BT
+/F1 10 Tf
+1 0 0 1 42.0 453.5 Tm
+(•) Tj
+ET
+0.100 0.100 0.100 rg
+BT
+/F1 10 Tf
+1 0 0 1 54.0 453.5 Tm
+(Who it's for: business analysts, operations & finance teams, and any data-curious business user who knows a) Tj
+ET
+0.100 0.100 0.100 rg
+BT
+/F1 10 Tf
+1 0 0 1 54.0 441.0 Tm
+(little SQL. Ideal as an onboarding accelerator, a pre-hackathon primer, or a proof-of-value that lands the) Tj
+ET
+0.100 0.100 0.100 rg
+BT
+/F1 10 Tf
+1 0 0 1 54.0 428.5 Tm
+(lakehouse story with a non-technical audience.) Tj
 ET
 0.106 0.192 0.224 rg
 BT
 /F2 13 Tf
-1 0 0 1 54.0 457.5 Tm
+1 0 0 1 54.0 406.0 Tm
 (What participants build \(the 8 labs\)) Tj
 ET
 1.000 0.212 0.129 RG
 1.4 w
-54.0 453.5 m 558.0 453.5 l S
+54.0 402.0 m 558.0 402.0 l S
 0.106 0.192 0.224 rg
-54.0 425.5 504.0 16.0 re f
+54.0 374.0 504.0 16.0 re f
 1.000 1.000 1.000 rg
 BT
 /F2 9.2 Tf
-1 0 0 1 58.0 430.0 Tm
+1 0 0 1 58.0 378.5 Tm
 (Lab) Tj
 ET
 1.000 1.000 1.000 rg
 BT
 /F2 9.2 Tf
-1 0 0 1 142.9 430.0 Tm
+1 0 0 1 142.9 378.5 Tm
 (What they do) Tj
 ET
 1.000 1.000 1.000 rg
 BT
 /F2 9.2 Tf
-1 0 0 1 392.1 430.0 Tm
+1 0 0 1 392.1 378.5 Tm
 (Databricks capability) Tj
 ET
 0.957 0.965 0.969 rg
-54.0 408.5 504.0 17.0 re f
+54.0 357.0 504.0 17.0 re f
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 58.0 414.5 Tm
+1 0 0 1 58.0 363.0 Tm
 (0 · Setup) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 142.9 414.5 Tm
+1 0 0 1 142.9 363.0 Tm
 (Deploy assets, check permissions & previews) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 392.1 414.5 Tm
+1 0 0 1 392.1 363.0 Tm
 (Unity Catalog) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 408.5 m 558.0 408.5 l S
+54.0 357.0 m 558.0 357.0 l S
 0.957 0.965 0.969 rg
-54.0 391.5 504.0 17.0 re f
+54.0 340.0 504.0 17.0 re f
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 58.0 397.5 Tm
+1 0 0 1 58.0 346.0 Tm
 (1 · Ingest) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 142.9 397.5 Tm
+1 0 0 1 142.9 346.0 Tm
 (Connect the operational source system) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 392.1 397.5 Tm
+1 0 0 1 392.1 346.0 Tm
 (Lakeflow Connect, Lakebase) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 391.5 m 558.0 391.5 l S
+54.0 340.0 m 558.0 340.0 l S
 0.957 0.965 0.969 rg
-54.0 374.5 504.0 17.0 re f
+54.0 323.0 504.0 17.0 re f
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 58.0 380.5 Tm
+1 0 0 1 58.0 329.0 Tm
 (2 · Discover) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 142.9 380.5 Tm
+1 0 0 1 142.9 329.0 Tm
 (Explore & document data three ways) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 392.1 380.5 Tm
+1 0 0 1 392.1 329.0 Tm
 (Unity Catalog, Genie, Domains) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 374.5 m 558.0 374.5 l S
+54.0 323.0 m 558.0 323.0 l S
 0.957 0.965 0.969 rg
-54.0 357.5 504.0 17.0 re f
+54.0 306.0 504.0 17.0 re f
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 58.0 363.5 Tm
+1 0 0 1 58.0 312.0 Tm
 (3 · Transform) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 142.9 363.5 Tm
+1 0 0 1 142.9 312.0 Tm
 (Build clean silver & gold tables) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 392.1 363.5 Tm
+1 0 0 1 392.1 312.0 Tm
 (Lakeflow Designer, medallion) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 357.5 m 558.0 357.5 l S
+54.0 306.0 m 558.0 306.0 l S
 0.957 0.965 0.969 rg
-54.0 340.5 504.0 17.0 re f
+54.0 289.0 504.0 17.0 re f
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 58.0 346.5 Tm
+1 0 0 1 58.0 295.0 Tm
 (4 · KPIs) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 142.9 346.5 Tm
+1 0 0 1 142.9 295.0 Tm
 (Define shared metrics once, for all) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 392.1 346.5 Tm
+1 0 0 1 392.1 295.0 Tm
 (Metric Views) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 340.5 m 558.0 340.5 l S
+54.0 289.0 m 558.0 289.0 l S
 0.957 0.965 0.969 rg
-54.0 323.5 504.0 17.0 re f
+54.0 272.0 504.0 17.0 re f
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 58.0 329.5 Tm
+1 0 0 1 58.0 278.0 Tm
 (5 · Decide) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 142.9 329.5 Tm
+1 0 0 1 142.9 278.0 Tm
 (Ask questions, forecast, weigh evidence) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 392.1 329.5 Tm
+1 0 0 1 392.1 278.0 Tm
 (Genie Spaces, ai_forecast\(\)) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 323.5 m 558.0 323.5 l S
+54.0 272.0 m 558.0 272.0 l S
 0.957 0.965 0.969 rg
-54.0 306.5 504.0 17.0 re f
+54.0 255.0 504.0 17.0 re f
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 58.0 312.5 Tm
+1 0 0 1 58.0 261.0 Tm
 (6 · Visualize) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 142.9 312.5 Tm
+1 0 0 1 142.9 261.0 Tm
 (Track the decision on live dashboards) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 392.1 312.5 Tm
+1 0 0 1 392.1 261.0 Tm
 (AI/BI Dashboards) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 306.5 m 558.0 306.5 l S
+54.0 255.0 m 558.0 255.0 l S
 0.957 0.965 0.969 rg
-54.0 289.5 504.0 17.0 re f
+54.0 238.0 504.0 17.0 re f
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 58.0 295.5 Tm
+1 0 0 1 58.0 244.0 Tm
 (7 · Clean up) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 142.9 295.5 Tm
+1 0 0 1 142.9 244.0 Tm
 (Reset the workspace for the next run) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 9.2 Tf
-1 0 0 1 392.1 295.5 Tm
+1 0 0 1 392.1 244.0 Tm
 (Governed lifecycle) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 289.5 m 558.0 289.5 l S
+54.0 238.0 m 558.0 238.0 l S
 0.106 0.192 0.224 rg
 BT
 /F2 13 Tf
-1 0 0 1 54.0 273.5 Tm
+1 0 0 1 54.0 222.0 Tm
 (What your team walks away able to do) Tj
 ET
 1.000 0.212 0.129 RG
 1.4 w
-54.0 269.5 m 558.0 269.5 l S
+54.0 218.0 m 558.0 218.0 l S
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 257.5 Tm
+1 0 0 1 42.0 206.0 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 257.5 Tm
+1 0 0 1 54.0 206.0 Tm
 (Find & trust data with Unity Catalog, Genie, and business domains.) Tj
 ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 243.0 Tm
+1 0 0 1 42.0 189.5 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 243.0 Tm
+1 0 0 1 54.0 189.5 Tm
 (Turn raw tables into business-ready KPIs with a visual, no-code pipeline.) Tj
 ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 228.5 Tm
+1 0 0 1 42.0 173.0 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 228.5 Tm
+1 0 0 1 54.0 173.0 Tm
 (Define revenue, profit, cost & marketing ROI once - one source of truth every dashboard and Genie answer) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 216.0 Tm
+1 0 0 1 54.0 160.5 Tm
 (shares.) Tj
 ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 201.5 Tm
+1 0 0 1 42.0 144.0 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 201.5 Tm
+1 0 0 1 54.0 144.0 Tm
 (Ask questions in plain English, forecast next quarter, and validate a hand-off instead of trusting it blindly.) Tj
 ET
 1.000 0.212 0.129 rg
 BT
 /F1 10 Tf
-1 0 0 1 56.0 187.0 Tm
+1 0 0 1 42.0 127.5 Tm
 (•) Tj
 ET
 0.100 0.100 0.100 rg
 BT
 /F1 10 Tf
-1 0 0 1 70.0 187.0 Tm
+1 0 0 1 54.0 127.5 Tm
 (Build & share AI/BI dashboards the whole company tracks daily.) Tj
-ET
-0.106 0.192 0.224 rg
-BT
-/F1 9.5 Tf
-1 0 0 1 54.0 169.5 Tm
-(Who it's for: business analysts, operations & finance teams, and any data-curious business user who knows a little) Tj
-ET
-0.106 0.192 0.224 rg
-BT
-/F1 9.5 Tf
-1 0 0 1 54.0 157.0 Tm
-(SQL. Ideal as an onboarding accelerator, a pre-hackathon primer, or a proof-of-value that lands the lakehouse story) Tj
-ET
-0.106 0.192 0.224 rg
-BT
-/F1 9.5 Tf
-1 0 0 1 54.0 144.5 Tm
-(with a non-technical audience.) Tj
 ET
 0.820 0.840 0.850 RG
 0.5 w
-54.0 124.0 m 558.0 124.0 l S
+54.0 101.0 m 558.0 101.0 l S
 0.400 0.440 0.460 rg
 BT
 /F1 8.5 Tf
-1 0 0 1 54.0 112.0 Tm
+1 0 0 1 54.0 89.0 Tm
 (Databricks Data Camp for Business Users | Hands-on enablement by Databricks Field Engineering. "Databricks Retail Corp." and all) Tj
 ET
 0.400 0.440 0.460 rg
 BT
 /F1 8.5 Tf
-1 0 0 1 54.0 101.0 Tm
+1 0 0 1 54.0 78.0 Tm
 (figures are fictional, for instructional use only.) Tj
 ET
 endstream
@@ -497,11 +503,11 @@ xref
 0000000015 00000 n 
 0000000085 00000 n 
 0000000160 00000 n 
-0000008632 00000 n 
-0000008689 00000 n 
-0000008825 00000 n 
+0000008693 00000 n 
+0000008750 00000 n 
+0000008886 00000 n 
 trailer
 << /Size 7 /Root 6 0 R >>
 startxref
-8874
+8935
 %%EOF
