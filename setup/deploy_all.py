@@ -344,9 +344,11 @@ def seed_lakebase_tables(cfg, instance, csv_dir_local):
                 reader = csv.reader(fh)
                 header = next(reader)
                 cols = ", ".join(f'"{c}"' for c in header)
-                with cur.copy(
-                    f'COPY "{name}" ({cols}) FROM STDIN WITH (FORMAT csv)'
-                ) as cp:
+                # NOTE: no "FORMAT csv" here. psycopg3's write_row() serializes rows
+                # in Postgres' default TEXT format (tab-delimited); pairing that with
+                # a CSV-format COPY makes the server read each whole row as one column.
+                # We parse the CSV ourselves above and hand typed values to write_row.
+                with cur.copy(f'COPY "{name}" ({cols}) FROM STDIN') as cp:
                     for row in reader:
                         cp.write_row([None if v == "" else v for v in row])
             cnt = cur.execute(f'SELECT COUNT(*) FROM "{name}"').fetchone()[0]
