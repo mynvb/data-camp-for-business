@@ -105,21 +105,37 @@ Create connection** (or click **Create connection** inside the ingestion wizard)
 2. Choose **Lakeflow Connect**, then pick the **PostgreSQL / Lakebase** source.
 3. **Connection:** select the **`retail_corp_lakebase_conn`** you just created,
    then choose database **`retail_corp`**.
-4. **Select the tables to ingest** (choose all six):
-   - `dim_product`
-   - `dim_customer`
-   - `fact_orders`
-   - `fact_order_items`
-   - `fact_marketing_campaigns`
-   - `fact_sales_forecast`  *(the Data Science team's forecast hand-off — you'll
-     put it to the test in Lab 5)*
-5. **Destination:**
+4. **Select the tables to ingest** — choose all six.
+5. **Set the primary key and cursor column for each table.** Lakeflow Connect uses
+   these to ingest *incrementally*: the **primary key** de-duplicates / merges rows,
+   and the **cursor column** is how it detects new or changed rows since the last
+   run. Use these values (they match how the source tables are keyed):
+
+   | Table | Primary key | Cursor column |
+   |-------|-------------|---------------|
+   | `dim_product` | `product_id` | `product_id` |
+   | `dim_customer` | `customer_id` | `customer_id` |
+   | `fact_orders` | `order_id` | `order_ts` |
+   | `fact_order_items` | `order_item_id` | `order_item_id` |
+   | `fact_marketing_campaigns` | `campaign_id` | `campaign_id` |
+   | `fact_sales_forecast` | `forecast_id` | `forecast_id` |
+
+   > 💡 **Why these?** `fact_orders` has a real event timestamp (`order_ts`), so
+   > that's the natural cursor — the connector pulls orders newer than the last one
+   > it saw. The other tables have no update timestamp, so their auto-increasing
+   > **primary key doubles as the cursor** (these tables are insert-only in the lab,
+   > so a rising ID reliably marks "new rows"). In production you'd prefer a real
+   > `updated_at` column as the cursor wherever one exists.
+
+   *(`fact_sales_forecast` is the Data Science team's forecast hand-off — you'll put
+   it to the test in Lab 5.)*
+6. **Destination:**
    - Catalog: **`retail_corp`**
    - Schema: **`bronze`**
-6. **Schedule:** choose **Manual / Triggered** for the lab (in production you'd
+7. **Schedule:** choose **Manual / Triggered** for the lab (in production you'd
    pick a cadence, e.g. hourly). Name the ingestion pipeline
    `retail_corp_bronze_ingest`.
-7. Click **Create** and then **Run**.
+8. Click **Create** and then **Run**.
 
 > 🧭 **Don't see the PostgreSQL connector?** Lakeflow Connect connectors are
 > enabled per workspace. If it's missing, that's an admin toggle — ask your
