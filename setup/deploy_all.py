@@ -4,8 +4,9 @@ ONE-SHOT deployment for the Databricks Retail Corp. labs.
 Run this ONCE from Lab 0 (inside a Databricks notebook). It is idempotent — safe
 to re-run. It performs EVERY deployment step the labs need, in order:
 
-  1. Create catalog + bronze/silver/gold schemas. (Bronze starts EMPTY — it is
-     filled in Lab 1 by Lakeflow Connect, the proper ingestion path.)
+  1. Use the EXISTING catalog and create bronze/silver/gold schemas in it. (The
+     catalog is assumed to already exist; bronze starts EMPTY — it is filled in
+     Lab 1 by Lakeflow Connect, the proper ingestion path.)
   2. Create a Unity Catalog Volume and upload the market-research PDF (+ a
      reference copy of the CSVs).
   3. Provision a Lakebase (managed Postgres) instance — the "operational source
@@ -68,13 +69,22 @@ def _step(n, title):
 # 1. Catalog + schemas
 # ---------------------------------------------------------------------------
 def create_catalog_and_schemas(spark, cfg):
-    _step(1, f"Create catalog `{cfg['CATALOG']}` and schemas")
+    """Use the EXISTING catalog and create the bronze/silver/gold schemas in it.
+
+    The catalog (`retail_corp` by default) is assumed to already exist — it is
+    created once, up front, either by an admin or by you in the Databricks UI /
+    Lab 0 prerequisites. This step therefore does NOT try to create the catalog;
+    it only verifies the catalog is reachable and then creates the schemas inside
+    it. This avoids requiring the `CREATE CATALOG` metastore privilege here.
+    """
+    _step(1, f"Use catalog `{cfg['CATALOG']}` and create schemas")
     try:
-        spark.sql(f"CREATE CATALOG IF NOT EXISTS {cfg['CATALOG']}")
-        print(f"  ✓ catalog {cfg['CATALOG']}")
+        spark.sql(f"USE CATALOG {cfg['CATALOG']}")
+        print(f"  ✓ using existing catalog {cfg['CATALOG']}")
     except Exception as e:  # noqa: BLE001
-        print(f"  ✗ could not create catalog: {e}")
-        print("     TO-DO: ask an admin to run:")
+        print(f"  ✗ could not use catalog `{cfg['CATALOG']}`: {e}")
+        print("     This step assumes the catalog already exists. Create it once")
+        print("     (admin, or in the Catalog UI), then re-run deploy_all():")
         print(f"        CREATE CATALOG IF NOT EXISTS {cfg['CATALOG']};")
         print(f"        ALTER CATALOG {cfg['CATALOG']} OWNER TO `<your-user>`;")
         return False

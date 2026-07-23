@@ -114,29 +114,19 @@ def run_all_checks(cfg=None):
             )
     checks.append(c)
 
-    # -- 3. USE + CREATE SCHEMA on the catalog (if it exists) -----------------
-    c = Check(f"Can create schemas/tables in `{catalog}`")
+    # -- 3. Catalog is usable (exists → owner/grantee can build in it) --------
+    # NOTE: we intentionally do NOT probe individual GRANT rows here. Catalog
+    # OWNERSHIP grants full rights implicitly and is NOT stored as a privilege
+    # row (nor are privileges inherited via a group), so a grant-row probe raised
+    # false FAILs for users who had just created the catalog themselves. If the
+    # catalog exists you either own it or have access to it; deploy_all's
+    # CREATE SCHEMA / CREATE VOLUME statements are the real test and will report
+    # any genuine permission error clearly.
+    c = Check(f"Catalog `{catalog}` is usable (schemas/tables)")
     if exists:
-        priv_df, _ = _safe_sql(
-            spark,
-            "SELECT privilege_type FROM information_schema.catalog_privileges "
-            f"WHERE grantee IN ('{user}','account users') AND catalog_name = '{catalog}'",
-        )
-        privs = set()
-        if priv_df is not None:
-            privs = {r["privilege_type"] for r in priv_df.collect()}
-        needed = {"ALL PRIVILEGES"} | {"USE CATALOG", "CREATE SCHEMA"}
-        if "ALL PRIVILEGES" in privs or {"USE CATALOG", "CREATE SCHEMA"}.issubset(privs):
-            c.passed = True
-            c.detail = f"Grants present: {sorted(privs) or 'owner'}."
-        else:
-            c.passed = False
-            c.detail = f"Grants found: {sorted(privs) or 'none'}."
-            c.todo = (
-                "Ask the catalog owner/admin to run:\n"
-                f"    GRANT USE CATALOG, CREATE SCHEMA ON CATALOG {catalog} TO `{user}`;\n"
-                f"    GRANT USE SCHEMA, CREATE TABLE, SELECT, MODIFY ON CATALOG {catalog} TO `{user}`;"
-            )
+        c.passed = True
+        c.detail = ("Catalog exists — creation of schemas/tables is exercised by "
+                    "deploy_all (any real permission error surfaces there).")
     else:
         c.passed = None
         c.detail = "Skipped — catalog does not exist yet (see check above)."
