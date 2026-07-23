@@ -222,11 +222,18 @@ _PG_DDL = {
 }
 
 
-def _pg_connect(cfg, instance):
+# A freshly provisioned Lakebase instance exposes ONE default database. We create
+# the lab's own database (cfg["LAKEBASE_DB"]) inside it, so connect here first to
+# create/verify that database before opening the working connection.
+_LAKEBASE_DEFAULT_DB = "databricks_postgres"
+
+
+def _pg_connect(cfg, instance, dbname=None):
     """
     Open a psycopg connection to the Lakebase Postgres instance using a short-lived
-    Databricks OAuth token as the password (Lakebase's standard auth). Returns a
-    live connection or raises.
+    Databricks OAuth token as the password (Lakebase's standard auth). Connects to
+    `dbname` (defaults to the lab database cfg["LAKEBASE_DB"]). Returns a live
+    connection or raises.
     """
     from databricks.sdk import WorkspaceClient
     import psycopg  # psycopg 3
@@ -251,10 +258,34 @@ def _pg_connect(cfg, instance):
     user = w.current_user.me().user_name
 
     conn = psycopg.connect(
-        host=host, port=5432, dbname=cfg["LAKEBASE_DB"],
+        host=host, port=5432, dbname=dbname or cfg["LAKEBASE_DB"],
         user=user, password=token, sslmode="require", autocommit=True,
     )
     return conn
+
+
+def _ensure_database(cfg, instance):
+    """
+    Create the lab database (cfg["LAKEBASE_DB"]) inside the Lakebase instance if it
+    does not already exist. A new instance only has the default database, so we
+    connect to that first and issue CREATE DATABASE (idempotent). No-op if it's
+    already there.
+    """
+    target = cfg["LAKEBASE_DB"]
+    admin_conn = _pg_connect(cfg, instance, dbname=_LAKEBASE_DEFAULT_DB)
+    try:
+        cur = admin_conn.cursor()
+        exists = cur.execute(
+            "SELECT 1 FROM pg_database WHERE datname = %s", (target,)
+        ).fetchone()
+        if exists:
+            print(f"  ✓ database `{target}` already exists")
+        else:
+            # CREATE DATABASE cannot run inside a transaction; autocommit is on.
+            cur.execute(f'CREATE DATABASE "{target}"')
+            print(f"  ✓ created database `{target}`")
+    finally:
+        admin_conn.close()
 
 
 def seed_lakebase_tables(cfg, instance, csv_dir_local):
@@ -278,6 +309,16 @@ def seed_lakebase_tables(cfg, instance, csv_dir_local):
         print("  ! Python Postgres driver 'psycopg' not found on this cluster.")
         print("    TO-DO: run  %pip install psycopg[binary]  in a cell above,")
         print("    restart Python, then re-run deploy_all().")
+        return False
+
+    # A new Lakebase instance only ships the default database, so create the lab
+    # database first (idempotent), then connect to it.
+    try:
+        _ensure_database(cfg, instance)
+    except Exception as e:  # noqa: BLE001
+        print(f"  ! could not create Lakebase database `{cfg['LAKEBASE_DB']}`: {str(e)[:200]}")
+        print("    TO-DO: confirm the instance is AVAILABLE and that your user has")
+        print("    the 'databricks_superuser' / CREATEDB role on it, then re-run.")
         return False
 
     try:
