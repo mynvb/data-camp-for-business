@@ -158,11 +158,11 @@ display(spark.sql(f"SHOW TABLES IN {cfg['CATALOG_BRONZE']}"))"""),
 
 code("""# Confirm the Lakebase Postgres source is seeded and reachable.
 try:
-    import psycopg
+    import psycopg, uuid
     from databricks.sdk import WorkspaceClient
     w = WorkspaceClient()
     inst = w.database.get_database_instance(name=cfg["LAKEBASE_INSTANCE"])
-    cred = w.database.generate_database_credential(instance_names=[cfg["LAKEBASE_INSTANCE"]])
+    cred = w.database.generate_database_credential(request_id=str(uuid.uuid4()), instance_names=[cfg["LAKEBASE_INSTANCE"]])
     token = getattr(cred, "token", None) or getattr(cred, "credential", None)
     conn = psycopg.connect(
         host=inst.read_write_dns, port=5432, dbname=cfg["LAKEBASE_DB"],

@@ -240,9 +240,12 @@ def _pg_connect(cfg, instance):
     if not host:
         raise RuntimeError("Lakebase instance has no read_write_dns yet.")
 
-    # Databricks-issued OAuth token is used as the Postgres password.
+    # Databricks-issued OAuth token is used as the Postgres password. Newer SDK
+    # versions require a unique request_id (a UUID) on this call.
+    import uuid
     cred = w.database.generate_database_credential(
-        instance_names=[cfg["LAKEBASE_INSTANCE"]]
+        request_id=str(uuid.uuid4()),
+        instance_names=[cfg["LAKEBASE_INSTANCE"]],
     )
     token = getattr(cred, "token", None) or getattr(cred, "credential", None)
     user = w.current_user.me().user_name
