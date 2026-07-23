@@ -73,14 +73,38 @@ ingestion path you'd use in real life, rather than pre-loading."""),
 md("""## 1.2 — Ingest with Lakeflow Connect (guided UI steps)
 
 This is the part you do **in the Databricks UI** — it's the click-through a
-business user would actually use. Follow along:
+business user would actually use.
 
+### 1.2a — First, create the Postgres *connection*
+Lakeflow Connect ingests **through a Unity Catalog Connection** — a saved,
+governed pointer to your Lakebase instance. The Lakebase database won't appear in
+the wizard until this connection exists, so create it once.
+
+**Grab the connection details** by running the helper cell just below this one
+(1.2-helper). It prints the **host**, **port**, **database**, **user**, and a
+short-lived **token** to use as the password.
+
+Then create the connection — **Catalog → External Data → Connections →
+Create connection** (or click **Create connection** inside the ingestion wizard):
+
+| Field | Value |
+|-------|-------|
+| **Connection name** | `retail_corp_lakebase_conn` |
+| **Connection type** | PostgreSQL |
+| **Host** | the `read_write_dns` from the helper cell |
+| **Port** | `5432` |
+| **User** | your Databricks username (from the helper cell) |
+| **Password** | the **token** printed by the helper cell |
+
+> ⏱️ **The token is short-lived (~1 hour).** Create the connection and run the
+> pipeline promptly. If ingestion later fails to authenticate, re-run the helper
+> cell for a fresh token and update the connection's password.
+
+### 1.2b — Then run the ingestion wizard
 1. In the left sidebar, click **Data Ingestion** (or **+ New → Add data**).
 2. Choose **Lakeflow Connect**, then pick the **PostgreSQL / Lakebase** source.
-3. **Connection:**
-   - Select your existing instance **`retail-corp-lakebase`**.
-   - Database: **`retail_corp`**.
-   - Authentication is handled by Databricks (OAuth) — you don't manage passwords.
+3. **Connection:** select the **`retail_corp_lakebase_conn`** you just created,
+   then choose database **`retail_corp`**.
 4. **Select the tables to ingest** (choose all six):
    - `dim_product`
    - `dim_customer`
@@ -104,6 +128,31 @@ business user would actually use. Follow along:
 
 When the pipeline finishes, it will have written the six tables into
 `retail_corp.bronze` (which started empty after Lab 0). The next cells verify that."""),
+
+code('''# 1.2-helper — connection details for the Lakeflow Connect PostgreSQL connection.
+# Copy these into the "Create connection" form (1.2a). The token is the password
+# and is short-lived (~1 hour) — if ingestion later fails auth, re-run this cell
+# for a fresh token and update the connection.
+import uuid
+from databricks.sdk import WorkspaceClient
+
+w = WorkspaceClient()
+inst = w.database.get_database_instance(name=cfg["LAKEBASE_INSTANCE"])
+cred = w.database.generate_database_credential(
+    request_id=str(uuid.uuid4()),
+    instance_names=[cfg["LAKEBASE_INSTANCE"]],
+)
+token = getattr(cred, "token", None) or getattr(cred, "credential", None)
+
+print("Use these in Catalog → External Data → Connections → Create connection:")
+print("  Connection name : retail_corp_lakebase_conn")
+print("  Connection type : PostgreSQL")
+print("  Host            :", inst.read_write_dns)
+print("  Port            : 5432")
+print("  Database        :", cfg["LAKEBASE_DB"])
+print("  User            :", w.current_user.me().user_name)
+print("  Password (token):", token)
+print("\\n⏱️  Token expires in ~1 hour — create the connection and run the pipeline now.")'''),
 
 md("""## 1.3 — (Optional, technical) How the ingestion works under the hood
 
