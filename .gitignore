@@ -22,3 +22,6 @@ assets/market_research/*.rtf
 
 # Node
 node_modules/
+
+# Isaac local tooling state
+.isaac/
